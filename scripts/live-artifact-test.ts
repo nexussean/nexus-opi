@@ -41,6 +41,7 @@ import { mkdtemp, rm, mkdir, writeFile, readFile, readdir } from "node:fs/promis
 import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
+import { removeDirectory } from "./lib/remove.ts"
 import { spawn } from "node:child_process"
 import { Database } from "bun:sqlite"
 
@@ -519,6 +520,6 @@ try {
     if (process.env.OPI_KEEP_LIVE) console.log(`\n  kept: ${box}`)
     // The retries matter on Windows, where a handle that has only just been
     // released can still hold the directory for a moment.
-    else await rm(box, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+    else await removeDirectory(box)
   }
 }

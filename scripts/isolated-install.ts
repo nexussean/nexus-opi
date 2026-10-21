@@ -34,6 +34,7 @@ import { mkdtemp, rm, mkdir, writeFile, readFile, readdir } from "node:fs/promis
 import { existsSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
+import { removeDirectory } from "./lib/remove.ts"
 import { spawn } from "node:child_process"
 
 const REPO = resolve(import.meta.dir, "..")
@@ -290,7 +291,7 @@ console.log(JSON.stringify({ id: PLUGIN_ID, version: PLUGIN_VERSION, hasDefault:
 } finally {
   // The retries matter on Windows, where a handle that has only just been
   // released can still hold the directory for a moment.
-  if (box) await rm(box, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+  if (box) await removeDirectory(box)
 }
 
 /**

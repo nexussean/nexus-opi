@@ -29,6 +29,7 @@ import { mkdtemp, rm, mkdir, writeFile, readFile, readdir } from "node:fs/promis
 import { existsSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
+import { removeDirectory } from "./lib/remove.ts"
 import { spawn } from "node:child_process"
 import { createHash } from "node:crypto"
 import { SqliteProjectRegistry, SqliteTaskStore, SqliteMemoryStore } from "../packages/db/src/index.ts"
@@ -288,5 +289,5 @@ try {
   reopened?.close()
   store?.close()
   registry?.close()
-  await rm(box, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+  await removeDirectory(box)
 }

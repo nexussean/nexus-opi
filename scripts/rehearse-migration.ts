@@ -41,6 +41,7 @@ import { Database } from "bun:sqlite"
 import { mkdtemp, mkdir, copyFile, rm, writeFile, readFile } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import { join, resolve } from "node:path"
+import { removeDirectory } from "./lib/remove.ts"
 import { tmpdir } from "node:os"
 import { MIGRATIONS } from "../packages/db/src/migrations.ts"
 import { TASK_MIGRATIONS } from "../packages/db/src/task-migrations.ts"
@@ -236,9 +237,15 @@ try {
   let identitiesPreserved = true
   let identityDetail = "no projects to check"
   try {
-    const originalProjects = new Database(original, { readonly: true })
+    // The handle is **closed**. A read-only database that is left open
+    // holds the file, and Windows will not delete a file that is still
+    // open — so the rehearsal passed all thirteen checks and then failed
+    // on its cleanup.
+    const originalDb = new Database(original, { readonly: true })
+    const originalProjects = originalDb
       .query("SELECT id, key, canonical_root FROM projects ORDER BY id")
       .all() as { id: string; key: string; canonical_root: string }[]
+    originalDb.close()
     const upgradedProjects = db.query("SELECT id, key, canonical_root FROM projects ORDER BY id").all() as typeof originalProjects
     identitiesPreserved = JSON.stringify(originalProjects) === JSON.stringify(upgradedProjects)
     identityDetail = `${originalProjects.length} project identities compared by id, key and root`
@@ -252,9 +259,11 @@ try {
   let historiesPreserved = true
   let historyDetail = "no task histories to check"
   try {
-    const originalEvents = new Database(original, { readonly: true })
+    const originalDb = new Database(original, { readonly: true })
+    const originalEvents = originalDb
       .query("SELECT task_id, sequence, actor, operation, changes_json FROM task_events ORDER BY task_id, sequence")
       .all()
+    originalDb.close()
     const upgradedEvents = db
       .query("SELECT task_id, sequence, actor, operation, changes_json FROM task_events ORDER BY task_id, sequence")
       .all()
@@ -356,5 +365,5 @@ try {
 } finally {
   // The retries matter on Windows, where a handle that has only just been
   // released can still hold the directory for a moment.
-  await rm(scratch, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+  await removeDirectory(scratch)
 }
