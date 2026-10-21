@@ -52,7 +52,7 @@ try {
   // tautology.
   const second = await mkdtemp(join(tmpdir(), "opi-repack-"))
   try {
-    await run([npm, "pack", "--ignore-scripts", "--pack-destination", second], join(root, "release/bundle"))
+    await run([npm, ...npmArgs(["pack", "--ignore-scripts", "--pack-destination", second])], join(root, "release/bundle"))
     const repacked = (await readdir(second)).filter(name => name.endsWith(".tgz"))
     const firstBytes = await readFile(join(scratch, packed.filename))
     const secondBytes = repacked.length ? await readFile(join(second, repacked[0]!)) : Buffer.alloc(0)
