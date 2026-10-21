@@ -72,8 +72,20 @@ export interface BillingRecord {
   complete: boolean
 }
 
-/** Where the runtime keeps its session store. */
+/**
+ * Where the runtime keeps its session store.
+ *
+ * The path is overridable so that a test can control whether the store is
+ * **there**. The store's presence decides which reason a missing cost
+ * carries, and a test that asserted one of them without controlling the
+ * store was really a test of the machine it ran on — which is why it passed
+ * locally and failed on the hosted runners.
+ *
+ * The benchmark never sets the override: it always measures the real store.
+ */
 export function sessionStorePath(): string {
+  const override = process.env.OPI_BENCH_SESSION_STORE
+  if (override) return override
   return join(homedir(), ".local", "share", "opencode", "opencode.db")
 }
 

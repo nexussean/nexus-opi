@@ -96,7 +96,11 @@ try {
   // would then find no `.git` and fall back to the path strategy.
   const git = async (...args: string[]) => {
     await new Promise<void>((resolveRun, rejectRun) => {
-      const child = spawn("git", args, { cwd: gitProject })
+      // Windows resolves an executable through `PATHEXT`, and a bare `git`
+      // is not a file there.
+      const child = spawn(process.platform === "win32" ? "git.exe" : "git", args, {
+        cwd: gitProject,
+      })
       child.on("error", rejectRun)
       child.on("exit", code => (code === 0 ? resolveRun() : rejectRun(new Error(`git ${args.join(" ")} failed`))))
     })

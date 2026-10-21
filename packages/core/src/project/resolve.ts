@@ -1,11 +1,26 @@
 import { realpath } from "node:fs/promises"
 import type { ResolvedProject } from "@opi/contracts"
 import { findGitLayout, ownerRoot } from "./git.ts"
+import { isInside } from "../util/paths.ts"
 
 export interface ResolveOptions {
   /**
-   * Stop the upward walk at this directory (inclusive). A workspace that must
-   * not adopt a repository further up uses this.
+   * The trust boundary. A directory **outside** it does not resolve at all.
+   *
+   * It does two things. It stops the upward walk at this directory
+   * (inclusive), so a workspace does not adopt a repository further up; and
+   * it refuses a directory that is outside it, so a project beyond the
+   * boundary is not resolved by the path fallback.
+   *
+   * The second half is the part that is easy to miss. Stopping the walk is
+   * not the same as confining the result: a directory with no repository
+   * above it falls back to the path strategy, and without the refusal it
+   * would resolve anyway. The threat model requires it — T-03 says a
+   * directory outside the boundary does not resolve — and a test that
+   * asserted it happened to pass on macOS only because `/var` is a symlink
+   * to `/private/var`, which made the resolved path differ from the path
+   * that was asked about. The hosted runners, where the temporary
+   * directory is already real, failed it. That was the gate working.
    */
   boundary?: string
 }
@@ -32,6 +47,16 @@ export async function resolveProjectPath(
 ): Promise<ResolvedProject | undefined> {
   const root = await realpath(directory).catch(() => undefined)
   if (!root) return undefined
+
+  // The trust boundary. A directory outside it does not resolve, whatever
+  // the walk would have found.
+  if (options.boundary) {
+    const boundary = await realpath(options.boundary).catch(() => undefined)
+    // A boundary that cannot be resolved is a boundary that cannot be
+    // honoured, so it is honoured by refusing everything: a check that
+    // fails open is not a check.
+    if (!boundary || !isInside(boundary, root)) return undefined
+  }
 
   const layout = await findGitLayout(root, options.boundary)
 

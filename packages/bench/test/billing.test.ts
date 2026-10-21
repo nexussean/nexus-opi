@@ -1,4 +1,8 @@
 import { describe, expect, test } from "bun:test"
+import { mkdtempSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { Database } from "bun:sqlite"
 import { authoritativeCost, traceBilling } from "../harness/billing.ts"
 
 /**
@@ -56,6 +60,47 @@ describe("the trace's own billing", () => {
   })
 })
 
+/**
+ * A session store, under the test's control.
+ *
+ * The store's **presence** decides which reason a missing cost carries, so
+ * a test that does not control it is really a test of the machine it ran
+ * on. That is why the reason assertion below used to pass locally and fail
+ * on the hosted runners: the runners have no OpenCode store, so a different
+ * — equally correct — reason fired.
+ *
+ * The store is built here, in a temporary directory, and the harness is
+ * pointed at it.
+ */
+function withStore<T>(
+  rows: { sessionId: string; id: string; data: unknown }[],
+  run: (path: string) => T,
+): T {
+  const box = mkdtempSync(join(tmpdir(), "opi-billing-"))
+  const path = join(box, "opencode.db")
+  const db = new Database(path)
+  // The harness reads `session_message` by `session_id`, and the payload
+  // carries the message's own id, cost and tokens.
+  db.run("CREATE TABLE session_message (id TEXT, data TEXT, session_id TEXT)")
+  for (const row of rows) {
+    db.run("INSERT INTO session_message (id, data, session_id) VALUES (?, ?, ?)", [
+      row.id,
+      JSON.stringify(row.data),
+      row.sessionId,
+    ])
+  }
+  db.close()
+  const previous = process.env.OPI_BENCH_SESSION_STORE
+  process.env.OPI_BENCH_SESSION_STORE = path
+  try {
+    return run(path)
+  } finally {
+    if (previous === undefined) delete process.env.OPI_BENCH_SESSION_STORE
+    else process.env.OPI_BENCH_SESSION_STORE = previous
+    rmSync(box, { recursive: true, force: true })
+  }
+}
+
 describe("the authoritative cost", () => {
   test("with no session id the cost is a lower bound, not a fact", () => {
     // The run reported no session, so the store could not be consulted. The
@@ -81,7 +126,56 @@ describe("the authoritative cost", () => {
   })
 
   test("the reason says the store had no priced message", () => {
-    const result = authoritativeCost({ sessionId: "ses_nope", output: "" })
-    expect(result.reason).toContain("no priced message")
+    // The store is **there** and holds no message for this session, so the
+    // reason is that one.
+    withStore([], () => {
+      const result = authoritativeCost({ sessionId: "ses_nope", output: "" })
+      expect(result.reason).toContain("no priced message")
+      expect(result.complete).toBe(false)
+    })
+  })
+
+  test("the reason says the store was not there when it is not", () => {
+    // The other branch, and the one the hosted runners took. A store that
+    // is not there is a different fact from a store that holds nothing, and
+    // the reason says which.
+    const box = mkdtempSync(join(tmpdir(), "opi-billing-"))
+    const path = join(box, "absent.db")
+    const previous = process.env.OPI_BENCH_SESSION_STORE
+    process.env.OPI_BENCH_SESSION_STORE = path
+    try {
+      const result = authoritativeCost({ sessionId: "ses_nope", output: "" })
+      expect(result.reason).toContain("the session store is not at")
+      expect(result.complete).toBe(false)
+    } finally {
+      if (previous === undefined) delete process.env.OPI_BENCH_SESSION_STORE
+      else process.env.OPI_BENCH_SESSION_STORE = previous
+      rmSync(box, { recursive: true, force: true })
+    }
+  })
+
+  test("the store prices the run when it holds a priced message", () => {
+    // The positive case: the store **is** the authority, and it prices the
+    // final answer too — which the trace cannot.
+    withStore(
+      [
+        {
+          sessionId: "ses_known",
+          id: "row-1",
+          data: { id: "msg-1", cost: 0.0005, tokens: { input: 10, output: 5 } },
+        },
+        {
+          sessionId: "ses_known",
+          id: "row-2",
+          data: { id: "msg-2", cost: 0.00025, tokens: { input: 20, output: 8 } },
+        },
+      ],
+      () => {
+        const result = authoritativeCost({ sessionId: "ses_known", output: "" })
+        expect(result.complete).toBe(true)
+        expect(result.source).toBe("store")
+        expect(result.cost).toBeCloseTo(0.00075, 10)
+      },
+    )
   })
 })

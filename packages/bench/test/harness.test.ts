@@ -57,28 +57,49 @@ test("failed and timed-out runs cannot make a surface look cheap", () => {
 })
 
 
+/**
+ * A fake OpenCode binary that is runnable on this platform.
+ *
+ * On POSIX it is a script with a shebang. On Windows a script with a
+ * shebang is not an executable — `CreateProcess` needs a real image — so
+ * the fake is a bun program plus a batch file that runs it, and the
+ * harness runs a batch file through the command interpreter.
+ */
+async function writeFake(root: string, name: string, source: string): Promise<string> {
+  if (process.platform === "win32") {
+    const program = join(root, `${name}.ts`)
+    const launcher = join(root, `${name}.cmd`)
+    await writeFile(program, source)
+    await writeFile(launcher, `@bun "%~dp0${name}.ts" %*\r\n`)
+    return launcher
+  }
+  const executable = join(root, name)
+  await writeFile(executable, `#!/usr/bin/env bun\n${source}`, { mode: 0o755 })
+  return executable
+}
+
 test("control subprocess registers no plugin and launch failures stay invalid", async () => {
   const root = await mkdtemp(join(tmpdir(), "opi-runner-test-"))
   const previous = process.env.OPENCODE_BIN
-  const executable = join(root, "fake-opencode")
   const task = { id: "list-all", name: "list", kind: "read", prompt: "list" }
   try {
-    process.env.OPENCODE_BIN = executable
-    await writeFile(executable, `#!/usr/bin/env bun
+    let executable = await writeFake(root, "fake-opencode", `
 const config = await Bun.file("opencode.jsonc").json()
 if (config.plugins.length || await Bun.file("board.json").exists()) process.exit(42)
 if (!(await Bun.file("README.md").text()).includes(process.env.OPI_DATA_DIR)) process.exit(43)
 console.log(JSON.stringify({ type: "step_finish", part: { tokens: { input: 1, output: 1 }, cost: 0 } }))
-`, { mode: 0o755 })
+`)
+    process.env.OPENCODE_BIN = executable
     const valid = await measure("none-opi", task, "fake/model")
     expect(valid.error).toBeUndefined()
     expect(valid.toolCount).toBe(0)
     expect(valid.tokens.steps).toBe(1)
     // A CLI may exit nonzero after reporting usage; that is still an invalid run.
-    await writeFile(executable, `#!/usr/bin/env bun
+    executable = await writeFake(root, "fake-opencode", `
 console.log(JSON.stringify({ type: "step_finish", part: { tokens: { input: 1 }, cost: 1 } }))
 process.exit(7)
-`, { mode: 0o755 })
+`)
+    process.env.OPENCODE_BIN = executable
     const failed = await measure("none-opi", task, "fake/model")
     expect(failed.error).toBe("OpenCode exited with code 7")
     expect(failed.tokens.cost).toBe(1)
@@ -127,10 +148,8 @@ test("matched control grades final structured reads and committed writes end to 
   const root = await mkdtemp(join(tmpdir(), "opi-oracle-integration-"))
   const previous = process.env.OPENCODE_BIN
   try {
-    const executable = join(root, "fake-opencode")
-    process.env.OPENCODE_BIN = executable
     const module = new URL("../../db/src/tasks.ts", import.meta.url).pathname
-    await writeFile(executable, `#!/usr/bin/env bun
+    const executable = await writeFake(root, "fake-opencode", `
 import { SqliteTaskStore } from ${JSON.stringify(module)}
 import { Database } from "bun:sqlite"
 const path = process.env.OPI_DATA_DIR + "/registry.sqlite"
@@ -150,7 +169,8 @@ if (process.argv.at(-1).startsWith("Move")) {
 } else answer = JSON.stringify({cards:rows.map(t => ({key:t.public_key})),count:rows.length})
 emit("text", {text:answer,time:{end:Date.now()}})
 emit("step_finish", {reason:"stop",tokens:{input:2,output:2},cost:0.1})
-`, { mode: 0o755 })
+`)
+    process.env.OPENCODE_BIN = executable
     const read = await measure("none-opi", { id: "list-all", name: "list", kind: "read", prompt: "List every card" }, "fake/model")
     expect(read.verdict.grade).toBe("passed")
     // The fake CLI reports no session id, so the authoritative store cannot

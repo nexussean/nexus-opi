@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { readdirSync, readFileSync } from "node:fs"
+import { readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { gradeContent, CONTENT_GRADER_VERSION, graderFingerprint } from "../harness/content-grader.ts"
 import { boardSnapshot } from "../harness/board.ts"
@@ -20,7 +20,25 @@ import type { Snapshot } from "../harness/outcomes.ts"
  */
 
 const BEFORE = boardSnapshot() as Snapshot
-const RESULTS = resolve(import.meta.dir, "../../../fixtures/bench/results")
+
+/**
+ * The **committed** regression corpus.
+ *
+ * It used to be read from `fixtures/bench/results/` — the benchmark's own
+ * output directory, which is **gitignored**, because it holds 11 MB of
+ * historical reports that must not be rewritten.
+ *
+ * That made the test a test of one machine. In a fresh clone the directory
+ * does not exist, `readdirSync` threw `ENOENT` **at module load**, and the
+ * whole file went down — including the answer-shape tests below, which are
+ * self-contained and should have run everywhere. The hosted CI found it.
+ *
+ * The corpus is extracted from the reports by
+ * `scripts/extract-retained-answers.ts` and **versioned**, so the same
+ * answers are checked on every machine and every platform. The reports
+ * stay where they are: untracked, and unmodified.
+ */
+const CORPUS = resolve(import.meta.dir, "../../../fixtures/bench/retained/content-answers.json")
 
 /** One retained answer. */
 interface Retained {
@@ -32,38 +50,39 @@ interface Retained {
   answer: string
 }
 
-/** Every retained read answer. */
+/**
+ * Every retained read answer.
+ *
+ * A missing or unreadable corpus yields an **empty list**, not a thrown
+ * error. The failure then lands in the test that asserts the corpus is
+ * present, with a message that says what is wrong — rather than an
+ * `ENOENT` at import time that takes the file's other tests with it.
+ */
 function retainedAnswers(): Retained[] {
-  const out: Retained[] = []
-  const files = readdirSync(RESULTS).filter(f => f.startsWith("report-") && f.endsWith(".json")).sort()
-  for (const file of files) {
-    let report: any
-    try {
-      report = JSON.parse(readFileSync(join(RESULTS, file), "utf8"))
-    } catch {
-      continue
+  try {
+    const corpus = JSON.parse(readFileSync(CORPUS, "utf8")) as {
+      count?: number
+      answers?: Retained[]
     }
-    for (const run of report.runs ?? []) {
-      if (run.kind !== "read") continue
-      const answer = run.evidence?.answer
-      if (answer === undefined) continue
-      out.push({
-        file,
-        model: run.model,
-        shape: run.shape,
-        task: run.task,
-        oldGrade: run.verdict?.grade ?? "unknown",
-        answer,
-      })
-    }
+    return corpus.answers ?? []
+  } catch {
+    return []
   }
-  return out
 }
 
 const RETAINED = retainedAnswers()
 
 describe("the grader, against the retained answers", () => {
-  test("there are retained answers to check", () => {
+  test("the committed regression corpus is present and large enough to check", () => {
+    // The corpus is versioned, so its absence is a defect in the repository
+    // and not a missing local file. The message says so.
+    if (!RETAINED.length) {
+      throw new Error(
+        `The regression corpus is missing or empty: ${CORPUS}. ` +
+          "It is versioned on purpose, so this is a repository defect. " +
+          "Regenerate it with `bun run scripts/extract-retained-answers.ts`.",
+      )
+    }
     expect(RETAINED.length).toBeGreaterThan(300)
   })
 

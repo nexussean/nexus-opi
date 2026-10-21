@@ -1,9 +1,14 @@
 import { spawn } from "node:child_process"
 import { createHash } from "node:crypto"
 import { existsSync, realpathSync, statSync } from "node:fs"
-import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
+import { basename, delimiter, dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
+import { isInside } from "../util/paths.ts"
 import type { Gate, GateOutcome, GateRun } from "./types.ts"
 import { LIMITS, canRun } from "./types.ts"
+
+// The containment rule now lives in one place, and it is re-exported here
+// so the runner's own importers keep working.
+export { isInside } from "../util/paths.ts"
 
 /**
  * The bounded execution runner.
@@ -85,51 +90,6 @@ export function buildEnvironment(root: string): Record<string, string> {
 }
 
 /**
- * Is this path inside the root, after symlinks are resolved?
- *
- * The check is on the **resolved** path, so a symlink that points outside
- * the root is caught even though the path itself looks contained.
- */
-export function isInside(root: string, candidate: string): boolean {
-  const realRoot = safeRealpath(resolve(root))
-  // A path that does not exist yet cannot be checked by resolving it, so the
-  // nearest existing ancestor is resolved instead. A file inside the root
-  // that has not been created yet is still inside the root.
-  const realCandidate = safeRealpath(resolve(candidate)) ?? resolveExistingAncestor(resolve(candidate))
-  if (!realRoot || !realCandidate) return false
-  if (realCandidate === realRoot) return true
-  return realCandidate.startsWith(realRoot + sep)
-}
-
-function safeRealpath(path: string): string | undefined {
-  try {
-    return realpathSync(path)
-  } catch {
-    return undefined
-  }
-}
-
-/**
- * The real path of the nearest ancestor that exists.
- *
- * A path that does not exist cannot be resolved, and the check must still be
- * able to say where it *would* be. The deepest existing ancestor is resolved
- * and the missing tail is appended, so the comparison stays honest.
- */
-function resolveExistingAncestor(path: string): string | undefined {
-  let current = path
-  const tail: string[] = []
-  for (;;) {
-    const parent = dirname(current)
-    if (parent === current) return undefined
-    const resolved = safeRealpath(parent)
-    if (resolved) return join(resolved, ...tail.reverse())
-    tail.unshift(basename(current))
-    current = parent
-  }
-}
-
-/**
  * Resolve the executable to an absolute path, or refuse.
  *
  * A bare name is looked up in `PATH` and in the project's `node_modules/.bin`.
@@ -180,28 +140,29 @@ export function resolveExecutable(
     return { ok: true, path: absolute }
   }
 
-  const searchPath = (env.PATH ?? "").split(":").filter(Boolean)
+  const searchPath = (env.PATH ?? "").split(delimiter).filter(Boolean)
   for (const directory of searchPath) {
-    const candidate = join(directory, executable)
-    try {
-      if (!statSync(candidate).isFile()) continue
-    } catch {
-      continue
+    for (const candidate of executableCandidates(directory, executable)) {
+      try {
+        if (!statSync(candidate).isFile()) continue
+      } catch {
+        continue
+      }
+      if (isInside(root, candidate)) {
+        // A repository shipping its own `go` must not be able to stand in for
+        // the real one. The match is **skipped**, not fatal: the search
+        // continues, so a real system tool further down the PATH is still
+        // found. Refusing outright would make a gate unrunnable on a project
+        // that happens to have a `node_modules/.bin/go`.
+        continue
+      }
+      return { ok: true, path: candidate }
     }
-    if (isInside(root, candidate)) {
-      // A repository shipping its own `go` must not be able to stand in for
-      // the real one. The match is **skipped**, not fatal: the search
-      // continues, so a real system tool further down the PATH is still
-      // found. Refusing outright would make a gate unrunnable on a project
-      // that happens to have a `node_modules/.bin/go`.
-      continue
-    }
-    return { ok: true, path: candidate }
   }
   // Nothing outside the project was found. If a project-local copy exists,
   // the reason is worth saying, because it is the likely cause.
   const local = searchPath
-    .map((directory) => join(directory, executable))
+    .flatMap((directory) => executableCandidates(directory, executable))
     .find((candidate) => {
       try {
         return statSync(candidate).isFile()
@@ -221,6 +182,20 @@ export function resolveExecutable(
     reason: "executable_not_found",
     message: `The executable ${executable} was not found.`,
   }
+}
+
+/**
+ * The candidates for a bare executable name in one PATH directory.
+ *
+ * On Windows a bare name resolves through `PATHEXT`: `go` is `go.exe`, and
+ * `go` on its own is not a file. Without this, **no** executable could be
+ * found on Windows, because the name would never match a file.
+ */
+function executableCandidates(directory: string, executable: string): string[] {
+  const direct = join(directory, executable)
+  if (process.platform !== "win32") return [direct]
+  const extensions = (process.env.PATHEXT ?? ".COM;.EXE;.BAT;.CMD").split(";")
+  return [direct, ...extensions.map(extension => `${direct}${extension.toLowerCase()}`)]
 }
 
 /**
@@ -363,14 +338,31 @@ function execute(options: ExecuteOptions): Promise<ExecuteOutcome> {
 
     /** Kill the whole process group, not just the direct child. */
     const killTree = (): void => {
-      try {
+      if (process.platform === "win32") {
+        // Windows has no process groups to signal, so the negative pid is
+        // meaningless there. `taskkill /T` is the tree kill: the child and
+        // everything it started. Without it a gate that starts a server
+        // would leave the server running.
         if (child.pid !== undefined) {
-          // The negative pid is the process *group*.
-          process.kill(-child.pid, "SIGKILL")
+          try {
+            spawn("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
+              stdio: "ignore",
+              windowsHide: true,
+            })
+          } catch {
+            // Fall through to the direct kill.
+          }
         }
-      } catch {
-        // The group may already be gone, or the child may never have
-        // started. Either way there is nothing left to kill.
+      } else {
+        try {
+          if (child.pid !== undefined) {
+            // The negative pid is the process *group*.
+            process.kill(-child.pid, "SIGKILL")
+          }
+        } catch {
+          // The group may already be gone, or the child may never have
+          // started. Either way there is nothing left to kill.
+        }
       }
       try {
         child.kill("SIGKILL")

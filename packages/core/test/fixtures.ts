@@ -12,8 +12,18 @@ const GIT_ENV = {
   GIT_CONFIG_SYSTEM: "/dev/null",
 }
 
+/**
+ * The git executable, for the platform.
+ *
+ * Windows resolves an executable through `PATHEXT`, and a bare `git` is not
+ * a file: the spawn fails with `ENOENT`. Naming the extension resolves it.
+ */
+function gitExecutable(): string {
+  return process.platform === "win32" ? "git.exe" : "git"
+}
+
 export async function git(args: string[], cwd: string): Promise<string> {
-  const proc = Bun.spawn(["git", ...args], {
+  const proc = Bun.spawn([gitExecutable(), ...args], {
     cwd,
     env: { ...process.env, ...GIT_ENV },
     stdout: "pipe",

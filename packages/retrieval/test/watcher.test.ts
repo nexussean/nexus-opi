@@ -41,7 +41,12 @@ async function settledWatcher(options: {
   return { watcher, batches }
 }
 
-/** Wait for the watcher to report at least one batch. */
+/**
+ * Wait for the watcher to report at least one batch.
+ *
+ * This is only used where the assertion does not care **which** batch
+ * arrives. Where it does, use `waitForPaths`.
+ */
 async function waitForBatch(batches: string[][], timeoutMs = 4000): Promise<string[][]> {
   const started = Date.now()
   while (Date.now() - started < timeoutMs) {
@@ -51,15 +56,39 @@ async function waitForBatch(batches: string[][], timeoutMs = 4000): Promise<stri
   return batches
 }
 
+/**
+ * Wait until the reported paths satisfy the predicate.
+ *
+ * The watcher's first report is not always the one under test: a file
+ * written into a directory can produce a report for the **directory** first
+ * and the file a moment later. Waiting for "any batch" therefore raced,
+ * and the test failed at random under load — which is how it presented on
+ * the hosted runners.
+ *
+ * So the wait is driven by what the test is actually looking for.
+ */
+async function waitForPaths(
+  batches: string[][],
+  predicate: (paths: string[]) => boolean,
+  timeoutMs = 4000,
+): Promise<string[]> {
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    const reported = batches.flat()
+    if (reported.length > 0 && predicate(reported)) return reported
+    await Bun.sleep(50)
+  }
+  return batches.flat()
+}
+
 describe("ProjectWatcher", () => {
   test("reports a changed file", async () => {
     const { watcher, batches } = await settledWatcher({ onChange: () => {} })
 
     await writeFile(join(box, "src", "a.ts"), "export const a = 1\n")
-    await waitForBatch(batches)
+    const reported = await waitForPaths(batches, paths => paths.some(path => path.endsWith("a.ts")))
     watcher.close()
 
-    const reported = batches.flat()
     expect(reported.some((path) => path.endsWith("a.ts"))).toBe(true)
   })
 
@@ -67,10 +96,9 @@ describe("ProjectWatcher", () => {
     const { watcher, batches } = await settledWatcher({ onChange: () => {} })
 
     await writeFile(join(box, "src", "nested.ts"), "export const b = 1\n")
-    await waitForBatch(batches)
+    const reported = await waitForPaths(batches, paths => paths.some(path => path.endsWith("nested.ts")))
     watcher.close()
 
-    const reported = batches.flat()
     expect(reported.some((path) => path.endsWith("nested.ts"))).toBe(true)
   })
 
@@ -78,10 +106,10 @@ describe("ProjectWatcher", () => {
     const { watcher, batches } = await settledWatcher({ onChange: () => {} })
 
     await writeFile(join(box, "src", "rel.ts"), "x")
-    await waitForBatch(batches)
+    const reported = await waitForPaths(batches, paths => paths.includes("src/rel.ts"))
     watcher.close()
 
-    expect(batches.flat()).toContain("src/rel.ts")
+    expect(reported).toContain("src/rel.ts")
   })
 
   test("a burst of edits becomes one batch", async () => {
@@ -138,13 +166,13 @@ describe("ProjectWatcher", () => {
     const { watcher, batches } = await settledWatcher({ onChange: () => {} })
 
     await writeFile(join(box, "src", "gone.ts"), "x")
-    await waitForBatch(batches)
+    await waitForPaths(batches, paths => paths.some(path => path.endsWith("gone.ts")))
     batches.length = 0
 
     await rm(join(box, "src", "gone.ts"))
-    await waitForBatch(batches)
+    const reported = await waitForPaths(batches, paths => paths.some(path => path.endsWith("gone.ts")))
     watcher.close()
 
-    expect(batches.flat().some((path) => path.endsWith("gone.ts"))).toBe(true)
+    expect(reported.some((path) => path.endsWith("gone.ts"))).toBe(true)
   })
 })

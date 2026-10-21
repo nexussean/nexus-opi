@@ -2,8 +2,9 @@ import { describe, expect, test, beforeEach, afterEach } from "bun:test"
 import { mkdtemp, rm, mkdir, writeFile, readFile, readdir, stat } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join, resolve } from "node:path"
-import { defaultDataDir, indexPath, registryPath, ensureDir } from "@opi/db"
+import { basename, join, resolve } from "node:path"
+import { defaultDataDir, indexPath, registryPath, ensureDir, DATA_DIR_NAME } from "@opi/db"
+import { isInside } from "@opi/core"
 
 /**
  * **T-11 — Uninstall.**
@@ -55,16 +56,36 @@ describe("T-11: uninstall", () => {
     expect(indexPath("/some/worktree", dataDir).endsWith(".sqlite")).toBe(true)
   })
 
-  test("the data directory is the default one, not the project", () => {
+  test("the data directory is the default one, not the project", async () => {
     // The default is the platform's convention, never the project. A plugin
     // that wrote into the project would be writing into the user's code.
+    //
+    // The assertion is about the **property**, not about one platform's
+    // spelling: the directory is named for the plugin, and it is not inside
+    // the project the plugin is running in. The earlier version hard-coded
+    // macOS's "OpenCodeProjectIntelligence" and forbade the substring
+    // "project" — which is the plugin's *own* name on Linux, so the test
+    // failed there. It had been passing on macOS only because macOS spells
+    // it with a capital P.
     const original = process.env.OPI_DATA_DIR
     delete process.env.OPI_DATA_DIR
+    // The project is a temporary directory the test stands in for, so the
+    // check does not depend on where the suite happens to be run from.
+    const project = await mkdtemp(join(tmpdir(), "opi-project-"))
+    const cwd = process.cwd()
+    process.chdir(project)
     try {
       const dir = defaultDataDir()
-      expect(dir).not.toContain("project")
-      expect(dir).toContain("OpenCodeProjectIntelligence")
+      // The directory is named for the plugin, in the platform's spelling:
+      // the case and the separators are the platform's convention, the name
+      // is the plugin's.
+      const normalise = (text: string) => text.toLowerCase().replace(/-/g, "")
+      expect(normalise(basename(dir))).toBe(normalise(DATA_DIR_NAME))
+      // And it is not inside the project. This is the property that matters:
+      // the plugin's own data never lands in the user's code.
+      expect(isInside(project, dir)).toBe(false)
     } finally {
+      process.chdir(cwd)
       if (original !== undefined) process.env.OPI_DATA_DIR = original
     }
   })

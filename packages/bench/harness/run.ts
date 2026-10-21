@@ -197,6 +197,21 @@ const BENCH_NAMESPACE = arg("--namespace", "benchtasks")!
  * `OPENCODE_BIN` overrides it. The desktop app's copy is found by the
  * version it carries, under the app's support directory.
  */
+/**
+ * The argv for running the OpenCode binary.
+ *
+ * On Windows a `.cmd` or `.bat` is not an executable: `CreateProcess` needs
+ * a real image, and a batch file has to be run through the command
+ * interpreter. The benchmark's own fake binaries are batch files there, so
+ * the harness does what Windows requires rather than failing to launch.
+ */
+export function opencodeArgv(binary: string, args: string[]): string[] {
+  if (process.platform === "win32" && /\.(cmd|bat)$/i.test(binary)) {
+    return [process.env.COMSPEC ?? "cmd.exe", "/c", binary, ...args]
+  }
+  return [binary, ...args]
+}
+
 function findOpencode(): string {
   const override = arg("--opencode") ?? process.env.OPENCODE_BIN
   if (override) return override
@@ -799,7 +814,7 @@ export async function measure(shape: Shape, task: Task, model: string): Promise<
     const fileHandle = await open(outputFile, "w")
     cleanupChild = async () => { await fileHandle.close().catch(() => {}) }
     const child = Bun.spawn(
-      [opencode, "run", "--standalone", "--model", model, "--format", "json", prompt],
+      opencodeArgv(opencode, ["run", "--standalone", "--model", model, "--format", "json", prompt]),
       {
         cwd: dir,
         stdout: fileHandle.fd,

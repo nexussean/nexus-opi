@@ -3,6 +3,18 @@ import { mkdirSync } from "node:fs"
 import { basename, dirname, join } from "node:path"
 
 /**
+ * The name of the directory OPI keeps its own data in.
+ *
+ * It is **not** the plugin's runtime id verbatim: the runtime id is
+ * `opencode-project-intelligence`, and the platform's convention for an
+ * application's own directory is title case on macOS and Windows and lower
+ * case on Linux. The name is a constant so that a test can state the
+ * property — "the data lives in a directory named for the plugin" — without
+ * hard-coding one platform's spelling.
+ */
+export const DATA_DIR_NAME = "opencode-project-intelligence"
+
+/**
  * Where OPI keeps its own data.
  *
  * Follows each platform's convention rather than hardcoding Linux paths. The
@@ -21,7 +33,7 @@ export function defaultDataDir(): string {
     if (local) return join(local, "OpenCodeProjectIntelligence")
     return join(homedir(), "AppData", "Local", "OpenCodeProjectIntelligence")
   }
-  return join(process.env.XDG_DATA_HOME ?? join(homedir(), ".local", "share"), "opencode-project-intelligence")
+  return join(process.env.XDG_DATA_HOME ?? join(homedir(), ".local", "share"), DATA_DIR_NAME)
 }
 
 /**

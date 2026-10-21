@@ -23,6 +23,7 @@
     "release:audit": "bun run scripts/generate-sbom.ts",
     "release:ci-rehearsal": "bun run scripts/rehearse-ci.ts",
     "release:candidate": "bun run scripts/make-candidate.ts",
+    "bench:extract-retained": "bun run scripts/extract-retained-answers.ts",
     "release:live": "bun run scripts/live-artifact-test.ts"
   },
   "devDependencies": {

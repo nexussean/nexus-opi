@@ -151,14 +151,23 @@ describe("T-03: omitted location", () => {
   })
 
   test("a directory outside the trust boundary does not resolve", async () => {
-    // The boundary argument: a resolved project whose canonical root is
-    // outside the boundary is not accepted.
+    // The boundary argument: a directory outside the boundary is not
+    // resolved at all, even though the registry already knows it.
+    //
+    // The assertion is deliberately strict. It used to accept
+    // `identity === undefined || identity.canonicalRoot !== outside`, and
+    // the second half is what made it pass on macOS for the wrong reason:
+    // the temporary directory lives under `/var`, which is a symlink to
+    // `/private/var`, so the resolved path never equalled the path that was
+    // asked about. The boundary was not being enforced — the test was
+    // measuring a symlink. On the hosted runners, where the temporary
+    // directory is already real, it failed, and the failure was right.
     const registry = new MemoryProjectRegistry()
     const inside = await project("inside", "IN")
     const outside = await project("outside", "OUT")
     await registry.resolve(resolved(outside))
     const identity = await resolveProject(outside, registry, { boundary: inside })
-    expect(identity === undefined || identity.canonicalRoot !== outside).toBe(true)
+    expect(identity).toBeUndefined()
   })
 
   test("a project inside the boundary resolves normally", async () => {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { readdirSync, readFileSync } from "node:fs"
-import { join, resolve } from "node:path"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { gradeContent } from "../harness/content-grader.ts"
 import { boardSnapshot } from "../harness/board.ts"
 import type { Snapshot } from "../harness/outcomes.ts"
@@ -27,7 +27,25 @@ import type { Snapshot } from "../harness/outcomes.ts"
  */
 
 const BEFORE = boardSnapshot() as Snapshot
-const RESULTS = resolve(import.meta.dir, "../../../fixtures/bench/results")
+
+/**
+ * The **committed** regression corpus.
+ *
+ * It used to be read from `fixtures/bench/results/` — the benchmark's own
+ * output directory, which is **gitignored**, because it holds 11 MB of
+ * historical reports that must not be rewritten.
+ *
+ * That made the test a test of one machine: in a fresh clone the directory
+ * does not exist, `readdirSync` threw `ENOENT` at module load, and the
+ * whole file went down. The hosted CI found it.
+ *
+ * The corpus is extracted from the reports by
+ * `scripts/extract-retained-answers.ts` and **versioned**, so the same
+ * answers are checked on every machine and every platform. It carries the
+ * error that made a run invalid, and the regrade's own summary, so both
+ * halves of this file run everywhere.
+ */
+const CORPUS = resolve(import.meta.dir, "../../../fixtures/bench/retained/content-answers.json")
 
 /** One retained read run. */
 interface Retained {
@@ -40,42 +58,42 @@ interface Retained {
   answer: string
 }
 
-/** Every retained read run. */
-function retained(): Retained[] {
-  const out: Retained[] = []
-  for (const file of readdirSync(RESULTS).filter(f => f.startsWith("report-") && f.endsWith(".json")).sort()) {
-    let report: any
-    try {
-      report = JSON.parse(readFileSync(join(RESULTS, file), "utf8"))
-    } catch {
-      continue
-    }
-    for (const run of report.runs ?? []) {
-      if (run.kind !== "read") continue
-      const answer = run.evidence?.answer
-      if (answer === undefined) continue
-      out.push({
-        file,
-        model: run.model,
-        shape: run.shape,
-        task: run.task,
-        oldGrade: run.verdict?.grade ?? "unknown",
-        error: run.error,
-        answer,
-      })
-    }
+/** The corpus, and the regrade summary that travels with it. */
+function corpus(): {
+  answers: Retained[]
+  regrade: {
+    executionValidity?: { validRuns?: number; invalidRuns?: number }
+    validRuns?: number
+    oldToNew?: Record<string, Record<string, number>>
   }
-  return out
+} {
+  try {
+    const parsed = JSON.parse(readFileSync(CORPUS, "utf8")) as any
+    return { answers: parsed.answers ?? [], regrade: parsed.regrade ?? {} }
+  } catch {
+    // A missing corpus yields an empty list, not a thrown error. The
+    // failure lands in the test that asserts the corpus is present, with a
+    // message that says what is wrong.
+    return { answers: [], regrade: {} }
+  }
 }
 
-const RETAINED = retained()
+const { answers: RETAINED, regrade: REGRADE } = corpus()
 const VALID = RETAINED.filter(run => !run.error)
 const INVALID = RETAINED.filter(run => run.error)
 
 describe("the regrade's execution validity", () => {
-  test("there are invalid runs among the retained answers", () => {
-    // If this ever fails, the fixture set changed and the test below is
-    // no longer exercising the case it was written for.
+  test("the committed regression corpus is present, with invalid runs among it", () => {
+    // If the corpus is missing, the file's other tests would be checking
+    // nothing. If there are no invalid runs, the test below is no longer
+    // exercising the case it was written for.
+    if (!RETAINED.length) {
+      throw new Error(
+        `The regression corpus is missing or empty: ${CORPUS}. ` +
+          "It is versioned on purpose, so this is a repository defect. " +
+          "Regenerate it with `bun run scripts/extract-retained-answers.ts`.",
+      )
+    }
     expect(INVALID.length).toBeGreaterThan(0)
   })
 
@@ -107,20 +125,16 @@ describe("the regrade's execution validity", () => {
     expect(RETAINED.length).toBe(VALID.length + INVALID.length)
   })
 
-  test("the regrade's own artifact agrees with the reports", () => {
-    // The artifact is a convenience, not the source of truth. When it is
-    // present it must agree.
-    let latest: any
-    try {
-      latest = JSON.parse(readFileSync(join(RESULTS, "regrade-latest.json"), "utf8"))
-    } catch {
-      return
-    }
-    expect(latest.executionValidity.validRuns).toBe(VALID.length)
-    expect(latest.executionValidity.invalidRuns).toBe(INVALID.length)
-    expect(latest.validRuns).toBe(VALID.length)
+  test("the regrade's own summary agrees with the answers it summarises", () => {
+    // The summary is a convenience, not the source of truth — but it is
+    // **versioned alongside the answers**, so this check always runs rather
+    // than quietly doing nothing where a generated file happens to be
+    // absent.
+    expect(REGRADE.executionValidity?.validRuns).toBe(VALID.length)
+    expect(REGRADE.executionValidity?.invalidRuns).toBe(INVALID.length)
+    expect(REGRADE.validRuns).toBe(VALID.length)
     // The matrix sums to the valid runs, not to every answer.
-    const matrixTotal = Object.values(latest.oldToNew as Record<string, Record<string, number>>)
+    const matrixTotal = Object.values(REGRADE.oldToNew as Record<string, Record<string, number>>)
       .flatMap(row => Object.values(row))
       .reduce((sum, count) => sum + count, 0)
     expect(matrixTotal).toBe(VALID.length)
