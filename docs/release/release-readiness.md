@@ -1,170 +1,314 @@
-# Release readiness — NO GO (two gates cleared)
+# Release readiness — the technical gates
 
-Updated 2026-10-21, later the same day. Candidate 0.1.0, prepared locally,
-**not published**.
+**Date:** 2026-10-21. **Candidate:** `opencode-project-intelligence` 0.1.0.
+**Source revision:** `86c11d3adb6f` on `main`.
+**Artifact SHA-256:** `42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87`.
+**Published:** **no.** The candidate is `private: true` and `UNLICENSED`.
 
-**What changed:** the tree-sitter peer conflict is resolved, the isolated
-install now succeeds, and the SBOM and audit are regenerated. The two gates
-that were **blocked** on the dependency conflict — *package installation* and
-*dependency resolution / SBOM* — are now **passed**. The other four gates are
-unchanged. The overall verdict is still **NO GO**, because the remaining
-gates are not about dependencies.
-The owner selected a cross-platform release requiring macOS, Linux, and Windows
-CI. The full schema remains the default. No optimization matrix was run.
+**Verdict: the technical gates are met on this platform. The hosted
+three-platform CI has not run, and two owner decisions are outstanding.**
 
-The [previous report](release-readiness-before-artifact-audit.md) is historical;
-its “ready to publish” conclusion is superseded by the isolated artifact checks.
+The previous report is preserved at
+[`release-readiness-before-artifact-audit.md`](release-readiness-before-artifact-audit.md).
+Nothing in it was rewritten; this report adds evidence for this candidate.
 
-## Confirmed defects and changes
+---
 
-- The npm `files` allowlist omitted `packages/`, despite the entry point importing
-  that directory. The allowlist now includes the shipped code and manifest.
-- The copied dashboard executable imported `../src/web/server.ts`, which does not
-  exist in the bundle. Its import now points to the bundled adapter.
-- Runtime dependencies used by retrieval were absent from the release manifest.
-  The builder now gathers all shipped packages' external production dependencies,
-  pins their installed versions, and rejects version conflicts. Workspace-linked
-  imports are only a preliminary smoke check, never proof of a working install.
-- The inventory now covers all first-party bundle files, including the entry point,
-  launcher, package manifest and changelog, with full SHA-256 hashes. The inventory
-  excludes itself; the packed tarball has its own full SHA-256 in the artifact report.
-- Audit attribution previously searched payload fields before filtering. It now
-  accepts top-level envelope location only and checks workspace identity too.
-  A getter-trap regression test checks that a foreign workspace payload is untouched.
-- Code Mode auditing requires an experimental opt-in. Commands are withheld unless
-  separately enabled; log size/access controls and failure warnings were added.
-  See [the audit policy](../security/audit-policy.md). Live T-13 compliance is not claimed.
-- A real two-process test now contends on a held SQLite write transaction and checks
-  project-isolated results and task histories. The old Promise.all test was sequential.
-- **The tree-sitter peer conflict is resolved.** The three grammars disagreed about
-  which `tree-sitter` they wanted, and no single version satisfied all three:
-  `tree-sitter-typescript@0.23.2` needs `^0.21.0`, the transitive
-  `tree-sitter-javascript@0.23.1` needs `^0.21.1`, and `tree-sitter-go@0.25.0`
-  needs `^0.25.0`. The Go grammar moved to the `0.23` line, which keeps the
-  `0.21` peer; the TypeScript grammar stayed, because it has no release after
-  `0.23.2`. The declared set is now `tree-sitter@^0.21.1`,
-  `tree-sitter-typescript@^0.23.2` and `tree-sitter-go@^0.23.4` — consistent,
-  with **no peer validation bypassed and no language dropped**. The full
-  analysis is in [the peer-conflict note](tree-sitter-peer-conflict.md).
-- The release manifest's dependencies are now **derived from the workspace**
-  rather than copied by hand. The hand-copied list is how the conflict
-  survived: the workspace moved to `tree-sitter@0.21.1` and the manifest still
-  said `0.25.1`, and the packaged install was the only place it showed.
+## 1. The gates
 
-## Release commands
-
-| Command | Purpose |
-|---|---|
-| `bun run check` | Workspace typechecks and test suite |
-| `bun run release:pilot` | Existing MVP acceptance pilot in temporary data |
-| `bun run release:recovery` | Legacy registry/task upgrade, failed migration transaction, exact backup restore |
-| `bun run release:build` | Construct the distributable directory |
-| `bun run release:verify` | Pack, inspect, extract outside the repo, install dependencies, import plugin, build launcher, SBOM and audit |
-| `bun run release:isolated` | Pack the bundle, install the tarball into an **empty** directory with peer validation left on, and parse TypeScript, JavaScript and Go **from the installed tree** |
-| `bun run release:sbom` | The dependency audit and the SBOM, computed from the **installed** tree rather than the declarations |
-
-`release:verify --diagnostic-peer-tree` may generate a diagnostic dependency graph
-after a peer conflict. It **still exits nonzero** and cannot satisfy the release gate.
-A diagnostic lockfile is not an approved release lockfile. The script does not publish.
-
-The source manifest fingerprints packages, scripts, workflow definitions and lockfiles.
-`release/evidence/artifact-check.json` identifies the exact tarball and available
-validation. The dependency audit and license inventory have narrower scopes than a
-complete security review. The secret pattern scan is deliberately labeled limited.
-
-## Local verification results
-
-- `bun run check`: **700 passed, 0 failed**, 58 test files; all workspace typechecks passed. The full run required localhost/watcher access outside the sandbox; the sandbox-only run failed those environment-dependent tests.
-- `bun run release:pilot`: **13/13** passed using temporary project/data directories.
-- `bun run release:build`: **11/11** passed. The manifest's version and dependencies are **derived from the workspace**.
-- The three release scripts passed a separate strict TypeScript check.
-- Recovery fixture: upgrade, original-row preservation, injected transaction failure and exact restore passed.
-- Actual packed artifact: **87 files**, SHA-256 `42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87`.
-- Source manifest digest: `bb09cf1403ce5a04b0fa2c0932eb8790327a1fc48820c855e60f8cd909fd42ff`.
-- **Isolated installation: passed.** The tarball installs into an empty directory with
-  peer validation left on, with **no** `--force` and **no** `--legacy-peer-deps`.
-  The installed tree is `tree-sitter@0.21.1`, `tree-sitter-typescript@0.23.2`,
-  `tree-sitter-go@0.23.4` and the transitive `tree-sitter-javascript@0.23.1`, and
-  **every peer requirement is met by the installed tree**.
-- **The isolated check: 9/9 passed** (`bun run release:isolated`). The bundle packs
-  into a tarball, the tarball installs into an **empty** directory, the install
-  reports **no peer conflict**, and every installed package's `tree-sitter` peer
-  requirement is met by the installed tree.
-- **Parsing from the installed package: passed.** TypeScript, JavaScript and Go each
-  parse from the installed tree — `root=program`, `root=program` and
-  `root=source_file`, with named children in each case. No language was dropped.
-- **The installed plugin loads: passed.** `id=opencode-project-intelligence`,
-  `version=0.1.0`, a plugin object as the default export.
-- Dependency audit: **passed**. Every peer requirement met, no declared-range
-  violation, every licence known (MIT), computed from the **installed** tree.
-- SBOM: **passed**. `release/sbom.json` (CycloneDX 1.5, 4 components) and npm's own
-  `release/evidence/sbom.cdx.json` (269 components) are both generated.
-- `npm audit`: **exit 0**, **zero** vulnerabilities at every severity.
-- `release:verify`: `artifact-checks-passed`, `isolatedImport: true`,
-  `sbomComplete: true`, `diagnosticPeerTree: false`, **`published: false`**.
-- Limited packed-file secret pattern scan: no matches; this is not a comprehensive secret scan.
-- GitHub repository lookup: the connection returned **404** for `nexussean/nexus-opi`. Repository existence versus access cannot be distinguished from that response. No hosted CI ran.
-
-Detailed evidence is in `release/evidence/`. No package was published and no real
-OpenCode configuration or user database was changed. Licensing is undecided;
-`private: true` and `UNLICENSED` prevent an accidental npm publish of the candidate.
-
-## Gates remaining
-
-| Gate | Current state | Completion criterion |
+| Gate | State | Evidence |
 |---|---|---|
-| Package installation | **Passed** | A clean isolated install and a runtime import, with no dependency overrides. Met: the tarball installs into an empty directory, every peer requirement is met, the plugin imports, and TypeScript, JavaScript and Go all parse from the installed tree. |
-| Dependency resolution / SBOM | **Passed** | Compatible tree-sitter peer declarations, a valid SBOM, and an audit of the final resolved graph. Met: the declared set is internally consistent, the audit is computed from the installed tree, the SBOM is generated, and `npm audit` reports zero vulnerabilities. |
-| Hosted CI | **Pending** | Successful required macOS, Linux and Windows jobs on the same revision; workflow preparation alone is not platform evidence |
-| Registry identity | **Owner input pending** | Confirm package name/scope and publishing owner; re-pack after metadata changes |
-| Licensing | **Owner undecided** | Choose terms before publication; candidate is private/UNLICENSED, with no new license grant |
-| Recovery | **Partial** | Run the rehearsal against a representative historical database copy; include memory and verification migrations and document the supported rollback boundary |
-| Live compatibility | **Pending** | Exercise final isolated artifact on the supported OpenCode runtime/platforms; previous live evidence predates these changes |
+| **Unit and integration suite** | **PASS** | 701 pass, 0 fail, 4 123 assertions, 58 files; every package typechecks. `bun run check`. |
+| **Acceptance pilot** | **PASS** | 13/13. The plan's own MVP shipping checklist, in a temporary data directory. `bun run release:pilot`. |
+| **Package installation** | **PASS** | The tarball installs into an empty directory with **npm and normal peer validation**. Every installed package's `tree-sitter` peer requirement is met by the installed tree. 9/9. `bun run release:isolated`. |
+| **Installed parsers** | **PASS** | TypeScript (`root=program`), JavaScript (`root=program`) and Go (`root=source_file`) each parse **from the installed package**. |
+| **Dependency audit and SBOM** | **PASS** | 6/6. Computed from the **installed** tree. Every peer requirement met, no declared-range violation, every licence known (MIT). `release/dependency-audit.json`, `release/sbom.json` (CycloneDX 1.5). |
+| **Release artifact check** | **PASS** | `artifact-checks-passed`, `isolatedImport: true`, `sbomComplete: true`, `diagnosticPeerTree: false`, `npm audit` exit 0 with **zero vulnerabilities** at every severity, `published: false`. |
+| **Recovery rehearsal** | **PASS** | 13/13 against a **copy of the real registry**. 36 project identities, 17 tasks and 19 task events preserved byte for byte; a controlled migration failure rolled back; the restore is exact; the source is unchanged. |
+| **Live final artifact** | **PASS** | 12/12. The **packaged tarball** in a real OpenCode session, with a temporary configuration, temporary project and temporary data. `fixtures/acceptance/release/live-artifact.json`. |
+| **CI rehearsal** | **PASS** | 9/9 local rehearsal of the workflow's steps, in the workflow's order. `release/evidence/ci-rehearsal.json`. |
+| **Cross-platform CI (macOS, Linux, Windows)** | **NOT RUN** | The target repository does not exist. See §3. |
+| **T-13 live validation** | **NOT RUN** | The experimental Code Mode audit is disabled, as the plan requires. See §4. |
+| **Registry identity** | **BLOCKED — owner** | The package name and scope are undecided. |
+| **Licensing** | **BLOCKED — owner** | The candidate is `UNLICENSED`. No licence was selected. |
 
-**Resolved.** The clean npm install no longer rejects anything: the declared set
-is `tree-sitter@^0.21.1`, `tree-sitter-typescript@^0.23.2` and
-`tree-sitter-go@^0.23.4`, which is internally consistent. The Go grammar moved
-to the `0.23` line, which keeps the `0.21` peer its sibling grammars need; the
-TypeScript grammar stayed, because it has no release after `0.23.2`.
+---
 
-No `--force` and no `--legacy-peer-deps` was used, and no language was dropped:
-TypeScript, JavaScript and Go all parse from the installed tree. The set is
-pinned by `packages/retrieval/test/dependencies.test.ts`, which fails if a
-future bump of one grammar breaks the others. The analysis is in
-[the peer-conflict note](tree-sitter-peer-conflict.md).
+## 2. The exact checks performed
 
-## CI and distribution boundaries
+Every command, and what it returned.
 
-`.github/workflows/release-checks.yml` defines PR, main, nightly and manual checks
-on all three operating systems, uploads evidence even on failure, and has read-only
-repository permissions. There is no publication job. The owner selected `nexussean/nexus-opi` as the target. This workspace has no `.git`
-metadata or configured remote; hosted execution cannot be claimed locally.
-The matrix covers OS families, not every CPU architecture or OpenCode version.
-Browser e2e, broader runtime compatibility, resource testing, and a full secret
-scanner remain outside this initial workflow and must be reconciled with P8 scope.
+| Command | Result |
+|---|---|
+| `bun run check` | **exit 0** — 701 pass, 0 fail, 4 123 assertions, 58 files, 22.4 s. Every package typechecks. |
+| `bun run release:pilot` | **exit 0** — 13/13 steps. |
+| `bun run release:build` | **exit 0** — 11/11 steps. The manifest's version and dependencies are **derived from the workspace**. |
+| `bun run release:isolated` | **exit 0** — 9/9 steps. npm, peer validation on. |
+| `bun run release:sbom` | **exit 0** — 6/6 steps. |
+| `bun run scripts/verify-release.ts` | **exit 0** — `artifact-checks-passed`, `published: false`. |
+| `bun run scripts/rehearse-migration.ts --source <copy>` | **exit 0** — 13/13 steps. |
+| `bun run scripts/live-artifact-test.ts` | **exit 0** — 12/12 steps. |
+| `bun run release:ci-rehearsal` | **exit 0** — 9/9 steps. |
+| `bun run scripts/make-candidate.ts` | **exit 0** — 6/6 steps. The source digest matches the tree over 193 files. |
 
-Only the combined bundle is intended for distribution. Private workspace packages
-remain internal `0.0.0` build inputs; they are not individually published. See
-[the changelog](../../CHANGELOG.md). Rust/Python parsing is not included; existing
-TypeScript/JavaScript and Go adapters remain in the candidate.
+### The live artifact test, in detail
 
-## Recovery limitations
+One local session, on `darwin/arm64`, OpenCode `v2.1.2`, model
+`ollama-cloud/deepseek-v4.1-flash`, artifact
+`42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87`.
 
-The automatic rehearsal uses a synthetic legacy registry/task database, verifies
-pre-existing row values survive upgrade, injects a failed transaction, checks SQLite
-integrity, and restores the snapshot to a new filename. `--source /path/to/copy.sqlite`
-opens that source read-only and rehearses in a temporary directory. Original user
-data is never migrated by this script. It is not a general reverse migration.
-Stop all writers before operational restoration; replacing a database while old
-WAL sidecars or connections remain is unsafe. No real database was rehearsed here.
+| Check | Outcome |
+|---|---|
+| The packaged artifact installs | The tarball installed into a temporary directory |
+| The plugin loads and its tools are called | `pi.status` called through the Code Mode wrapper |
+| The six expected tools register, and no others | `pi.context`, `pi.graph`, `pi.memory`, `pi.status`, `pi.task`, `pi.verify` |
+| A read works | A task created and listed; the key is the title's slug, `live-artifact-task` |
+| A write works | The title updated; the revision advanced **1 → 2** |
+| A revision conflict is refused | `"This task is at revision 2, not 1."` |
+| Verification is enforced | The board refused `backlog → done`; the allowed path was required |
+| An observable failure path | A write against a missing task: `"No task with that key."` |
+| Context retrieval | `src/widget.ts`, symbol `makeWidget` |
+| Graph retrieval | `src/widget.ts` (TypeScript) and `src/engine.go` (Go) |
+| The index is for **this** project | 3 files indexed for `/private/var/folders/lf/gjpczfx55cd5ypnzpqd1mbmr0000gn/T/opi-live-iZQH8T/project` |
 
-## Decision
+**Scope:** one local session on one platform. It does **not** establish
+cross-platform live compatibility, and it does not claim to.
 
-**Do not publish yet.** The dependency blockers are **cleared**: the isolated
-install passes with peer validation on, all three languages parse from the
-installed tree, the SBOM and audit are regenerated, and `npm audit` is clean.
-What remains is **hosted CI on three platforms, a live run of the final
-isolated artifact, a representative recovery rehearsal, and two owner
-decisions** (registry identity and licensing). Keep the full schema default.
-The experimental Code Mode audit is excluded from release security guarantees;
-if complete T-13 auditing is required for P8, its live validation blocks P8 too.
+---
+
+## 3. The cross-platform CI gate — a precise access blocker
+
+**The target repository `nexussean/nexus-opi` does not exist.**
+
+| Check | Result |
+|---|---|
+| `GET api.github.com/repos/nexussean/nexus-opi` | **404** |
+| `gh repo view nexussean/nexus-opi` | `Could not resolve to a Repository` |
+| `GET api.github.com` | **200** — the API is reachable |
+| `gh auth status` | **Authenticated** as `nexussean` |
+| The account's 20 repositories | `nexus-opi` is **not** among them |
+
+So the blocker is **not** network access and **not** authentication. It is
+that the repository has never been created.
+
+**The work is prepared and reviewable.** The workflow
+(`.github/workflows/release-checks.yml`) is complete: it runs on
+`ubuntu-latest`, `macos-latest` and `windows-latest` with `fail-fast:
+false`, so one platform's failure does not cancel the others' evidence; it
+runs the typecheck, the suite, the pilot, the recovery rehearsal, the build,
+the isolated install with the installed parsers, the dependency audit and
+the SBOM, the artifact check, and the candidate manifest; it records the
+runtime versions, the revision and the dependency information; and it
+uploads the per-platform evidence **whatever happened**. It has
+`permissions: contents: read` and **no publication job**.
+
+**Creating the repository is an owner decision, and the instructions were
+explicit: do not create a public repository or expose this private,
+unlicensed project.** So the repository was not created, the branch was not
+pushed, and hosted CI was not dispatched.
+
+**What is needed to close the gate**, precisely:
+
+1. **Authorisation** to create a repository under `nexussean`, and its
+   **visibility**. A private repository is the safe choice for an
+   unlicensed project: it lets the CI run, and it exposes nothing.
+2. **Push authorisation** for the branch `main` at revision `86c11d3`.
+3. **Actions enabled** on the repository, with the workflow's read-only
+   permission set as the default.
+
+The local rehearsal (`release/evidence/ci-rehearsal.json`) ran **all nine
+steps of the workflow, in the workflow's order, on this platform**, and all
+nine passed. That is evidence that the steps work **here**. It is not
+evidence that hosted CI passed, and it is not evidence that Linux or Windows
+pass.
+
+---
+
+## 4. The T-13 live validation — a separate gate
+
+The experimental Code Mode audit is **disabled** in the live test, as the
+plan requires, and its live validation is **not** claimed.
+
+The audit trail itself is implemented (`packages/adapter-opencode/src/audit.ts`
+and `audit-source.ts`), it is opt-in, it filters on the event's location
+**before** reading a payload, and it drops the user-content event kinds by
+name. Its **unit** behaviour is covered. What is missing is a **live**
+Code Mode session with `OPI_AUDIT_LOG` set, on a runtime whose event
+metadata shape matches what the reader expects.
+
+**If complete T-13 auditing is required for P8, that is a separate gate**,
+and it is not closed by this report.
+
+---
+
+## 5. The recovery rehearsal — against real data
+
+The source was a **copy** of the owner's real registry, taken with `cp` and
+verified to carry the same 36 projects, 17 tasks and 19 task events. The
+**original was never opened for writing**, and the rehearsal re-checks that
+at the end by comparing the source's logical state with its own first
+reading.
+
+| Check | Outcome |
+|---|---|
+| The source opens read-only | The copy was opened read-only; the original's mtime is unchanged |
+| The backup is a consistent snapshot, including committed WAL data | `VACUUM INTO` — a file copy alone would miss committed WAL content |
+| The copy reaches the current schema in **every** family | registry, task, memory, verification: all true |
+| Every original row is preserved, byte for byte | 17 tables checked, no losses |
+| The data under test is present | projects=36, worktrees=36, tasks=17, task_events=19 |
+| Project identities are preserved | 36 compared by id, key and root |
+| Task histories and revisions are preserved | 19 events compared by task, sequence, actor, operation and payload |
+| A failed migration rolls back with nothing leaked | The injected failure left the database unchanged |
+| The upgraded database passes the integrity check | `integrity_check=ok` |
+| The restore reproduces the backup exactly | The restored logical state equals the backup |
+| The restore has no stale WAL sidecar | The restored file is new |
+| The source is unchanged | The original's logical state is identical |
+
+### What "rollback" means here
+
+**Restoring a backup, not running reverse migrations.** No reverse migrations
+exist, and the migrations are not all reversible. A restore returns the
+database to the state it was in when the backup was taken, so **any write
+made after the backup is lost**. That is the boundary.
+
+Operationally: **stop all writers before a restore.** Replacing a database
+while old WAL sidecars or connections remain is unsafe.
+
+### What the rehearsal does not cover
+
+It exercised the **registry, task, memory and verification** migration
+families against real data. The owner's registry has **no** memory rows, no
+verification gates and no verification runs — the tables exist and are
+migrated, but the rehearsal could not exercise a **non-empty** memory or
+verification table, because there is no such data. A database with populated
+memory and verification tables would be a better fixture, and the owner's
+does not have one.
+
+---
+
+## 6. The candidate
+
+`release/candidate.json` ties everything to one revision and one hash, and
+the check **fails** if the tree has moved since the artifacts were built.
+
+| | |
+|---|---|
+| Source revision | `86c11d3adb6f` on `main` |
+| Build source digest | `fcac726c6b340156…` over **195** files, matching the tree |
+| Artifact SHA-256 | `42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87` |
+| Files in the artifact | 87 |
+| Published | **false** |
+| Package name | `opencode-project-intelligence` (a placeholder for an undecided scope) |
+| License | `UNLICENSED` |
+
+The candidate includes the release manifest, the lockfile, the resolved
+dependency inventory, the SBOM, the licence inventory, the source manifest,
+the migration rehearsal, the artifact check and the candidate manifest
+itself.
+
+**The version is derived, not written twice.** The bundle's manifest takes
+its version from `PLUGIN_VERSION` in the adapter, and the two cannot drift.
+
+---
+
+## 7. Two findings worth keeping
+
+### The dependency policy was wrong, and the fix is a policy, not a version
+
+The dependency test prohibited `tree-sitter@0.25` **by version number**.
+That is the wrong policy: `0.25` is not wrong, it is simply not compatible
+with the grammar versions declared at the time. A future release of
+`tree-sitter-typescript` that supports `0.25` would be a **correct**
+upgrade, and a test that fails on the version number would block it for the
+wrong reason.
+
+The test now checks the actual condition — every grammar's **peer
+requirement** must be met by the resolved `tree-sitter`, the **resolved
+tree** rather than the declaration is examined, and no language may be
+dropped — and it keeps the bypass checks (`overrides`,
+`peerDependenciesMeta`, `--legacy-peer-deps`). A forward-compatibility test
+states the policy: a hypothetical version is judged by the same peer rule,
+so a compatible `0.25` set would pass.
+
+**And Bun's installer does not enforce peer requirements.** It installed a
+knowingly conflicting set without a word. The isolated install therefore
+uses **npm**, which does. A check that cannot fail proves nothing, and the
+negative control is recorded: npm rejects the original set with `ERESOLVE`
+and names the exact conflict.
+
+### The floating-dependency fragility is upstream, and it clears
+
+The isolated install failed three times with `ETARGET`, each time naming a
+different package. The debug log gave the cause: `@aws-sdk/types@3.975.0`
+was **listed** in the registry's metadata, tagged `latest`, with a shasum —
+and its **tarball 404'd**. The AWS SDK publishes several packages at once,
+and for a short window the tarball is not yet propagated to the CDN that
+serves it.
+
+The **locked** set is unaffected; the release's own lockfile resolves to
+working versions. The fragility is in the **floating** install, and it is a
+property of `@opencode/plugin`'s transitive dependencies, not of OPI's.
+
+It cleared on its own within minutes, and a plain `npm install` then
+succeeded with no intervention. **No `overrides` block was added**: it would
+have been a workaround for an upstream defect that had already cleared, and
+it would have pinned a transitive version in the shipped manifest for no
+lasting reason. The full account is in
+[`floating-dependency-fragility.md`](floating-dependency-fragility.md).
+
+**What this means for the gate:** a transient registry fault will appear as
+a failure in the isolated-install step, it is **not** a code defect, and the
+diagnosis is the same every time — re-run with a fresh cache and compare
+the named package against the registry's tarball URL. The gate does not
+become optional, and a registry fault is not recorded as a pass.
+
+---
+
+## 8. What remains
+
+### Technical blockers
+
+| # | Blocker | What closes it |
+|---|---|---|
+| **T-1** | **Cross-platform CI has not run.** The repository does not exist. | An owner decision to create it (private), then push and dispatch. The workflow is ready. |
+| **T-2** | **The live T-13 audit has not been validated.** | A live Code Mode session with `OPI_AUDIT_LOG` set. Only required if complete T-13 auditing is in P8's scope. |
+| **T-3** | **The recovery rehearsal could not exercise a non-empty memory or verification table.** The owner's registry has none. | A database with populated memory and verification tables. |
+| **T-4** | **Only macOS has been exercised.** | The hosted matrix. |
+| **T-5** | **The Rust and Python parser adapters do not exist.** P8's scope names them. | Implementation, or an explicit scope decision to drop them from v1. |
+
+### Owner decisions
+
+| # | Decision | Why it is the owner's |
+|---|---|---|
+| **O-1** | **The registry identity**: the package name and the scope. | The candidate is a placeholder. It needs a scope the owner controls. |
+| **O-2** | **The licence.** | The candidate is `UNLICENSED` and `private: true`. No licence was selected and none was invented. |
+| **O-3** | **The repository's visibility**, and whether to create it at all. | A public repository would expose an unlicensed project. |
+| **O-4** | **The retrieval token criterion.** | The spike missed its own 1/3 bar; the shipping path clears the plan's 15% target by 4×. |
+| **O-5** | **The kanban plugin's fate** — absorb it or ship it separately. | It competes for the same board queries. |
+
+### Not blocking
+
+- The **wording, guidance and structure levers** are unsettled on cost. The
+  shipping configuration is unchanged and the unresolved question is
+  documented, so this does not block a release.
+- The **schema-size decision** is **NOT RESOLVED** and the minimal schema
+  does not ship. The full schema remains the default, and that is the
+  shipping configuration.
+
+---
+
+## 9. What was deliberately not done
+
+- **Nothing was published.** `published: false`; the candidate is `private:
+  true` and `UNLICENSED`; the user's `~/.config/opencode` is unchanged; the
+  bundle is not in it; the real registry's mtime is unchanged.
+- **No repository was created**, and nothing was pushed. The target does not
+  exist, and the instructions were explicit.
+- **The shipping schema default was not changed.**
+- **No optimisation matrix was run.**
+- **No real user configuration or data was modified.** The live test used a
+  temporary `XDG_CONFIG_HOME`, a temporary project and a temporary data
+  directory. The recovery rehearsal opened the source read-only and did
+  every mutation in a copy.
+- **No historical report was rewritten.** The earlier readiness report is
+  preserved, and the regrade wrote new files alongside the originals.
