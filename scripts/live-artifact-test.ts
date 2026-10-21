@@ -517,6 +517,8 @@ try {
   // diagnosed without guessing.
   if (box) {
     if (process.env.OPI_KEEP_LIVE) console.log(`\n  kept: ${box}`)
-    else await rm(box, { recursive: true, force: true })
+    // The retries matter on Windows, where a handle that has only just been
+    // released can still hold the directory for a moment.
+    else await rm(box, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
   }
 }

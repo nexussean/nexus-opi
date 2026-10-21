@@ -354,5 +354,7 @@ try {
   console.log(`\n${steps.filter(entry => entry.ok).length}/${steps.length} steps passed`)
   process.exitCode = steps.every(entry => entry.ok) ? 0 : 1
 } finally {
-  await rm(scratch, { recursive: true, force: true })
+  // The retries matter on Windows, where a handle that has only just been
+  // released can still hold the directory for a moment.
+  await rm(scratch, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
 }

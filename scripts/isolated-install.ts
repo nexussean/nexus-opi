@@ -288,7 +288,9 @@ console.log(JSON.stringify({ id: PLUGIN_ID, version: PLUGIN_VERSION, hasDefault:
   console.error(error)
   process.exitCode = 1
 } finally {
-  if (box) await rm(box, { recursive: true, force: true })
+  // The retries matter on Windows, where a handle that has only just been
+  // released can still hold the directory for a moment.
+  if (box) await rm(box, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
 }
 
 /**

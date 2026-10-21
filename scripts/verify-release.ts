@@ -135,4 +135,4 @@ try {
   await writeFile(join(evidence, "artifact-check.json"), JSON.stringify(report, null, 2) + "\n")
   console.log(JSON.stringify(report, null, 2))
   if (installError || !sbomComplete || auditCode !== 0) process.exitCode = 1
-} finally { await rm(scratch, { recursive: true, force: true }) }
+} finally { await rm(scratch, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }) }

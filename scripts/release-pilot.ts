@@ -75,6 +75,15 @@ async function treeHash(dir: string): Promise<string> {
 let registry: SqliteProjectRegistry | undefined
 let store: SqliteTaskStore | undefined
 let memory: SqliteMemoryStore | undefined
+/**
+ * The store that is opened for the restart check.
+ *
+ * It is a **second** handle on the same database, and it has to be closed
+ * like any other. On Windows an open database file cannot be deleted, so
+ * an unclosed handle made the sandbox's removal fail with `EBUSY` — after
+ * every step had passed.
+ */
+let reopened: SqliteTaskStore | undefined
 
 try {
   // --- Two projects: one git, one not ------------------------------------
@@ -150,7 +159,7 @@ try {
 
   // --- Restart: the state survives ----------------------------------------
   store.close()
-  const reopened = new SqliteTaskStore({ path: dbPath })
+  reopened = new SqliteTaskStore({ path: dbPath })
   const afterRestart = reopened.getByKey(gitResolved!.id, "PI-0001")
   step(
     "the state survives a restart",
@@ -272,8 +281,12 @@ try {
   console.log(`\n${passed}/${steps.length} steps passed`)
   process.exitCode = passed === steps.length ? 0 : 1
 } finally {
+  // Every handle is closed before the sandbox is removed. On Windows a
+  // file that is still open cannot be deleted, so an unclosed handle
+  // fails the whole run at the last step.
   memory?.close()
+  reopened?.close()
   store?.close()
   registry?.close()
-  await rm(box, { recursive: true, force: true })
+  await rm(box, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
 }
