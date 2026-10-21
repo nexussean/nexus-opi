@@ -1,8 +1,10 @@
 # Release readiness — the technical gates
 
 **Date:** 2026-10-21. **Candidate:** `opencode-project-intelligence` 0.1.0.
-**Source revision:** `f120729` on `main`, pushed to the private
-`nexussean/nexus-opi`.
+**Source revision:** the candidate was assembled and verified at `76639d9` on
+`main`, pushed to the private `nexussean/nexus-opi`. Later commits are
+documentation only and do not change the source tree's digest
+`fcac726c6b340156…`, so every result below still belongs to this candidate.
 **Artifact SHA-256:** `42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87`.
 **Published:** **no.** The candidate is `private: true` and `UNLICENSED`.
 
@@ -219,7 +221,7 @@ the check **fails** if the tree has moved since the artifacts were built.
 
 | | |
 |---|---|
-| Source revision | `f1207291401f` on `main`, pushed to the private `nexussean/nexus-opi` |
+| Source revision | `76639d951dad` on `main`, pushed to the private `nexussean/nexus-opi` |
 | Build source digest | `fcac726c6b340156…` over **195** files, matching the tree |
 | Artifact SHA-256 | `42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87` |
 | Files in the artifact | 87 |
