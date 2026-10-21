@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { Database } from "bun:sqlite"
 
 import { measure, prepareOpiBoard, summarise, summariseOutcomes, type RunMetrics } from "../harness/run.ts"
@@ -148,7 +149,10 @@ test("matched control grades final structured reads and committed writes end to 
   const root = await mkdtemp(join(tmpdir(), "opi-oracle-integration-"))
   const previous = process.env.OPENCODE_BIN
   try {
-    const module = new URL("../../db/src/tasks.ts", import.meta.url).pathname
+    // `fileURLToPath`, not `.pathname`: on Windows the pathname of a file
+    // URL is `/D:/a/...`, with a leading slash before the drive letter, and
+    // it is not a path the runtime can import.
+    const module = fileURLToPath(new URL("../../db/src/tasks.ts", import.meta.url))
     const executable = await writeFake(root, "fake-opencode", `
 import { SqliteTaskStore } from ${JSON.stringify(module)}
 import { Database } from "bun:sqlite"

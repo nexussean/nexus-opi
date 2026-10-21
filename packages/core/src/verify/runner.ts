@@ -71,15 +71,22 @@ export interface RunResult {
  */
 export function buildEnvironment(root: string): Record<string, string> {
   const inherited = process.env.PATH ?? ""
+  // The separator is the platform's: `:` on POSIX and `;` on Windows.
+  // Splitting on a hard-coded colon on Windows made the whole PATH one
+  // directory name, so **no** executable could be found and every gate
+  // failed with `executable_not_found`.
   const pathEntries = [
-    ...inherited.split(":").filter(Boolean),
-    "/usr/local/bin",
-    "/usr/bin",
-    "/bin",
+    ...inherited.split(delimiter).filter(Boolean),
+    // The system tool directories are POSIX paths. On Windows the system
+    // directories are already in the inherited PATH, and adding a path
+    // that does not exist only makes the PATH longer.
+    ...(process.platform === "win32"
+      ? []
+      : ["/usr/local/bin", "/usr/bin", "/bin"]),
     join(root, "node_modules", ".bin"),
   ]
   return {
-    PATH: pathEntries.join(":"),
+    PATH: pathEntries.join(delimiter),
     HOME: join(root, ".opencode", "tmp"),
     TMPDIR: join(root, ".opencode", "tmp"),
     LANG: "C",

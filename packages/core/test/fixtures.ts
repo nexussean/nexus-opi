@@ -22,10 +22,26 @@ function gitExecutable(): string {
   return process.platform === "win32" ? "git.exe" : "git"
 }
 
+/**
+ * The environment for a git subprocess.
+ *
+ * Windows spells the variable `Path`, and spreading `process.env`
+ * preserves that spelling. A spawn that looks for `PATH` — which is what
+ * the executable search does — then finds nothing, and the spawn fails
+ * with `ENOENT` even though git is installed. So the key is normalised.
+ */
+function gitEnvironment(): Record<string, string> {
+  const env: Record<string, string> = { ...process.env, ...GIT_ENV }
+  const path = env.PATH ?? env.Path ?? process.env.PATH ?? process.env.Path ?? ""
+  env.PATH = path
+  env.Path = path
+  return env
+}
+
 export async function git(args: string[], cwd: string): Promise<string> {
   const proc = Bun.spawn([gitExecutable(), ...args], {
     cwd,
-    env: { ...process.env, ...GIT_ENV },
+    env: gitEnvironment(),
     stdout: "pipe",
     stderr: "pipe",
   })
