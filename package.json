@@ -1,0 +1,32 @@
+{
+  "name": "opencode-project-intelligence",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Project-aware task state, code navigation, memory and verification for OpenCode.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun test --path-ignore-patterns '**/release/**'",
+    "check": "bun run typecheck && bun test",
+    "evaluate:retrieval": "bun run scripts/evaluate-retrieval.ts",
+    "seed:bench-board": "bun run scripts/seed-bench-board.ts",
+    "bench": "bun run packages/bench/harness/run.ts",
+    "release:pilot": "bun run scripts/release-pilot.ts",
+    "release:build": "bun run scripts/build-release.ts",
+    "release:verify": "bun run scripts/verify-release.ts",
+    "release:recovery": "bun run scripts/rehearse-migration.ts",
+    "release:isolated": "bun run scripts/isolated-install.ts",
+    "release:sbom": "bun run scripts/generate-sbom.ts",
+    "release:audit": "bun run scripts/generate-sbom.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "bun": ">=1.2.0"
+  }
+}

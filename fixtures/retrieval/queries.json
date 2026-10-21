@@ -1,0 +1,436 @@
+[
+  {
+    "id": "opi-01",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is resolveProjectPath defined",
+    "expect": ["packages/core/src/project/resolve.ts"]
+  },
+  {
+    "id": "opi-02",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is findGitLayout defined",
+    "expect": ["packages/core/src/project/git.ts"]
+  },
+  {
+    "id": "opi-03",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is MemoryProjectRegistry defined",
+    "expect": ["packages/core/src/project/registry.ts"]
+  },
+  {
+    "id": "opi-04",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is SqliteProjectRegistry defined",
+    "expect": ["packages/db/src/registry.ts"]
+  },
+  {
+    "id": "opi-05",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is SqliteJobQueue defined",
+    "expect": ["packages/db/src/queue.ts"]
+  },
+  {
+    "id": "opi-06",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is JobWorker defined",
+    "expect": ["packages/core/src/queue/worker.ts"]
+  },
+  {
+    "id": "opi-07",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is MetricsSink defined",
+    "expect": ["packages/core/src/telemetry/index.ts"]
+  },
+  {
+    "id": "opi-08",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is MemoryFeatureFlags defined",
+    "expect": ["packages/core/src/flags/index.ts"]
+  },
+  {
+    "id": "opi-09",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is toServiceError defined",
+    "expect": ["packages/core/src/errors/index.ts"]
+  },
+  {
+    "id": "opi-10",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is defaultDataDir defined",
+    "expect": ["packages/db/src/paths.ts"]
+  },
+  {
+    "id": "opi-11",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is the status service defined",
+    "expect": ["packages/core/src/status/index.ts"]
+  },
+  {
+    "id": "opi-12",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is the envelope helper defined",
+    "expect": ["packages/contracts/src/index.ts"]
+  },
+  {
+    "id": "opi-13",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is the plugin entrypoint defined",
+    "expect": ["packages/adapter-opencode/src/index.ts"]
+  },
+  {
+    "id": "opi-14",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where are the schema migrations defined",
+    "expect": ["packages/db/src/migrations.ts"]
+  },
+  {
+    "id": "opi-15",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is the job worker queue type defined",
+    "expect": ["packages/core/src/queue/types.ts"]
+  },
+  {
+    "id": "opi-16",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses resolveProject",
+    "expect": ["packages/core/src/project/index.ts"]
+  },
+  {
+    "id": "opi-17",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses findGitLayout",
+    "expect": ["packages/core/src/project/resolve.ts"]
+  },
+  {
+    "id": "opi-18",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses ownerRoot",
+    "expect": ["packages/core/src/project/resolve.ts", "packages/core/src/project/git.ts"]
+  },
+  {
+    "id": "opi-19",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses backoffMs",
+    "expect": ["packages/core/src/queue/types.ts", "packages/db/src/queue.ts"]
+  },
+  {
+    "id": "opi-20",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses estimateTokens",
+    "expect": ["packages/retrieval/src/retrieve.ts", "packages/retrieval/src/evaluate.ts"]
+  },
+  {
+    "id": "opi-21",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses interpretQuery",
+    "expect": ["packages/retrieval/src/retrieve.ts"]
+  },
+  {
+    "id": "opi-22",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses errorEnvelope",
+    "expect": ["packages/core/src/errors/index.ts", "packages/core/src/status/index.ts"]
+  },
+  {
+    "id": "opi-23",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses the renewLease method",
+    "expect": ["packages/db/src/queue.ts"]
+  },
+  {
+    "id": "opi-24",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses fileJobKey",
+    "expect": ["packages/core/src/queue/types.ts"]
+  },
+  {
+    "id": "opi-25",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses recoverAbandoned",
+    "expect": ["packages/db/src/queue.ts"]
+  },
+  {
+    "id": "opi-26",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where does the project identity get resolved",
+    "expect": ["packages/core/src/project/resolve.ts"]
+  },
+  {
+    "id": "opi-27",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where is the git common directory read",
+    "expect": ["packages/core/src/project/git.ts"]
+  },
+  {
+    "id": "opi-28",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where does the sqlite database get opened",
+    "expect": ["packages/db/src/registry.ts", "packages/db/src/queue.ts"]
+  },
+  {
+    "id": "opi-29",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where are the schema migrations applied",
+    "expect": ["packages/db/src/migrations.ts", "packages/db/src/registry.ts"]
+  },
+  {
+    "id": "opi-30",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where does the background worker run jobs",
+    "expect": ["packages/core/src/queue/worker.ts"]
+  },
+  {
+    "id": "opi-31",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where is the local metrics counter incremented",
+    "expect": ["packages/core/src/telemetry/index.ts", "packages/core/src/status/index.ts"]
+  },
+  {
+    "id": "opi-32",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where is the code index built",
+    "expect": ["packages/retrieval/src/indexer.ts"]
+  },
+  {
+    "id": "opi-33",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where are symbols extracted from the syntax tree",
+    "expect": ["packages/retrieval/src/symbols.ts"]
+  },
+  {
+    "id": "opi-34",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where are import edges extracted",
+    "expect": ["packages/retrieval/src/imports.ts"]
+  },
+  {
+    "id": "opi-35",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where is the retrieval ranked and scored",
+    "expect": ["packages/retrieval/src/retrieve.ts"]
+  },
+  {
+    "id": "opi-36",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where is the benchmark harness run",
+    "expect": ["packages/bench/harness/run.ts"]
+  },
+  {
+    "id": "opi-37",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where is the compatibility probe implemented",
+    "expect": ["packages/compat-spike/src/index.ts"]
+  },
+  {
+    "id": "opi-38",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where is the benchmark board implemented",
+    "expect": ["packages/bench/src/index.ts"]
+  },
+  {
+    "id": "opi-39",
+    "repo": "opi",
+    "kind": "config",
+    "query": "where is the data directory chosen per platform",
+    "expect": ["packages/db/src/paths.ts"]
+  },
+  {
+    "id": "opi-40",
+    "repo": "opi",
+    "kind": "config",
+    "query": "where are the feature flag defaults defined",
+    "expect": ["packages/core/src/flags/index.ts"]
+  },
+  {
+    "id": "opi-41",
+    "repo": "opi",
+    "kind": "config",
+    "query": "where is the error code list defined",
+    "expect": ["packages/core/src/errors/index.ts"]
+  },
+  {
+    "id": "opi-42",
+    "repo": "opi",
+    "kind": "config",
+    "query": "where is the confidence type defined",
+    "expect": ["packages/contracts/src/index.ts"]
+  },
+  {
+    "id": "kan-01",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is BoardStore defined",
+    "expect": ["src/board/store.ts"]
+  },
+  {
+    "id": "kan-02",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is normalizeBoard defined",
+    "expect": ["src/board/types.ts"]
+  },
+  {
+    "id": "kan-03",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is cardsInColumn defined",
+    "expect": ["src/board/types.ts"]
+  },
+  {
+    "id": "kan-04",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is createCardId defined",
+    "expect": ["src/board/ids.ts"]
+  },
+  {
+    "id": "kan-05",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is formatBoard defined",
+    "expect": ["src/board/format.ts"]
+  },
+  {
+    "id": "kan-06",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is registerTools defined",
+    "expect": ["src/tools.ts"]
+  },
+  {
+    "id": "kan-07",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is registerSkill defined",
+    "expect": ["src/skill.ts"]
+  },
+  {
+    "id": "kan-08",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is registerCommand defined",
+    "expect": ["src/command.ts"]
+  },
+  {
+    "id": "kan-09",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is startWebBoard defined",
+    "expect": ["src/web/server.ts"]
+  },
+  {
+    "id": "kan-10",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is BoardView defined",
+    "expect": ["src/ui/board.tsx"]
+  },
+  {
+    "id": "kan-11",
+    "repo": "kanban",
+    "kind": "usage",
+    "query": "what uses BoardStore",
+    "expect": ["src/board/store.ts"]
+  },
+  {
+    "id": "kan-12",
+    "repo": "kanban",
+    "kind": "usage",
+    "query": "what uses formatCard",
+    "expect": ["src/board/format.ts", "src/tools.ts"]
+  },
+  {
+    "id": "kan-13",
+    "repo": "kanban",
+    "kind": "usage",
+    "query": "what uses uniqueCardId",
+    "expect": ["src/board/ids.ts", "src/board/store.ts"]
+  },
+  {
+    "id": "kan-14",
+    "repo": "kanban",
+    "kind": "usage",
+    "query": "what uses asCardData",
+    "expect": ["src/board/guards.ts", "src/tui.tsx"]
+  },
+  {
+    "id": "kan-15",
+    "repo": "kanban",
+    "kind": "feature",
+    "query": "where is the board file written",
+    "expect": ["src/board/store.ts"]
+  },
+  {
+    "id": "kan-16",
+    "repo": "kanban",
+    "kind": "feature",
+    "query": "where are the kanban tools registered",
+    "expect": ["src/tools.ts"]
+  },
+  {
+    "id": "kan-17",
+    "repo": "kanban",
+    "kind": "feature",
+    "query": "where is the terminal board rendered",
+    "expect": ["src/ui/board.tsx"]
+  },
+  {
+    "id": "kan-18",
+    "repo": "kanban",
+    "kind": "feature",
+    "query": "where does the web board serve the board api",
+    "expect": ["src/web/server.ts"]
+  },
+  {
+    "id": "kan-19",
+    "repo": "kanban",
+    "kind": "config",
+    "query": "where is the rpc contract defined",
+    "expect": ["src/rpc.ts"]
+  },
+  {
+    "id": "kan-20",
+    "repo": "kanban",
+    "kind": "config",
+    "query": "where are the default columns defined",
+    "expect": ["src/board/types.ts"]
+  }
+]

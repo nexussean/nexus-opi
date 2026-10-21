@@ -1,0 +1,40 @@
+{
+  "note": "Live output of pi_status action=doctor, called from a real OpenCode session in the opencode-plugins/kanban project (not a git repository, so strategy is 'path').",
+  "schema_version": "1",
+  "status": "partial",
+  "project_id": "674a550c-d178-4dfa-a368-3c795540559f",
+  "worktree_id": "f26d5731-95d4-4a93-95a0-ac8f33060591",
+  "data": {
+    "project": {
+      "id": "674a550c-d178-4dfa-a368-3c795540559f",
+      "strategy": "path",
+      "canonicalRoot": "/Users/nexussean/Documents/Coding/opencode-plugins/kanban",
+      "worktree": {
+        "id": "f26d5731-95d4-4a93-95a0-ac8f33060591",
+        "root": "/Users/nexussean/Documents/Coding/opencode-plugins/kanban",
+        "kind": "root"
+      }
+    },
+    "index": {
+      "available": false,
+      "state": "absent",
+      "reason": "No indexer is registered yet, so the index status is unknown."
+    },
+    "features": {
+      "context.injection": false,
+      "memory.auto_capture": false,
+      "verification.execution": false,
+      "indexer.background": true,
+      "indexer.lsp": false,
+      "metrics.export": false
+    },
+    "diagnostics": [
+      "registry: /Users/nexussean/Library/Application Support/OpenCodeProjectIntelligence/registry.sqlite",
+      "plugin version: 0.1.0",
+      "flags: indexer.background"
+    ]
+  },
+  "warnings": ["No indexer is registered yet, so the index status is unknown."],
+  "sources": [],
+  "truncated": false
+}

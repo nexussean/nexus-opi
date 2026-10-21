@@ -1,0 +1,24 @@
+Running 25 held-out queries
+
+  system    hit@5   prec@5  tokens(5)  tokens→ans
+  opi       0.960    0.482         60          34
+  grep      0.640    0.371        123          38
+
+By question kind
+  symbol       9 queries   opi 9   grep 9
+  usage        5 queries   opi 5   grep 5
+  feature      6 queries   opi 5   grep 1
+  config       5 queries   opi 5   grep 1
+
+Misses
+  hold-09  where does the project identity get worked out
+     want: packages/core/src/project/resolve.ts
+     got:  packages/db/src/registry.ts, packages/core/src/project/registry.ts, packages/contracts/src/index.ts, packages/db/src/queue.ts, packages/core/src/queue/types.ts
+
+Kill criterion
+  PASS  OPI hit@5 is strictly greater than grep's  (0.960 vs 0.640)
+  PASS  OPI hit@5 is at least 0.90  (0.960)
+  FAIL  OPI's median tokens are at most a third of the baseline's  (60 vs 123)
+
+  FAILS: OPI's median tokens are at most a third of the baseline's
+

@@ -1,0 +1,38 @@
+name: Release checks (no publication)
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '23 5 * * *'
+permissions:
+  contents: read
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.2'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run release:pilot
+      - run: bun run release:recovery
+      - run: bun run release:build
+      - run: bun run release:verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-evidence-${{ matrix.os }}
+          path: release/evidence/
+          if-no-files-found: warn

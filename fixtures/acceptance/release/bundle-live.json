@@ -1,0 +1,23 @@
+{
+  "note": "A live OpenCode session against the RELEASE BUNDLE (release/bundle), not the workspace. The plugin loaded from a directory plugin entry, registered its six tools, and three of them were called successfully.",
+  "date": "2026-10-21",
+  "runtime": "/Users/nexussean/Library/Application Support/ai.opencode.desktop/cli/2.1.2-arm64/opencode-cli",
+  "plugin": "release/bundle (version 0.1.0)",
+  "toolsCalled": [
+    {
+      "tool": "execute",
+      "status": "completed",
+      "output": "{\n  \"items\": [\n    {\n      \"path\": \"tools.pi.task\",\n      \"description\": \"Work with the project's task board \u2014 the cards, issues and work items on it.\\n\\nThis is the board. A card is a task: it has a title, a priority, a\\nstate, acceptance criteria and verification evidence.\\n\\naction:\\n- list: the tasks, with what each is waiting for.\\n- get: one task, with its acceptance criteria and evidence.\\n"
+    },
+    {
+      "tool": "execute",
+      "status": "completed",
+      "output": "### pi.task (list): SUCCESS\n{\"schema_version\":\"1\",\"status\":\"ok\",\"project_id\":\"1b175186-dfc9-44a7-8d12-f26c76564b8f\",\"worktree_id\":\"aa03696a-1ac9-4ef7-a2e6-e462773340b7\",\"data\":{\"tasks\":[],\"waiting\":[],\"count\":0,\"total\":0,\"truncated\":false},\"warnings\":[],\"sources\":[],\"truncated\":false}\n\n### pi.context: SUCCESS\n{\"schema_version\":\"1\",\"status\":\"partial\",\"data\":{\"candidates\":[],\"tokens\":0,\"budgetTokens"
+    },
+    {
+      "tool": "shell",
+      "status": "completed",
+      "output": "total 16\ndrwxr-xr-x@  5 nexussean  wheel  160 Oct 21 11:48 .\ndrwxr-xr-x@ 10 nexussean  wheel  320 Oct 21 11:48 ..\ndrwxr-xr-x@ 12 nexussean  wheel  384 Oct 21 11:48 .git\n-rw-r--r--@  1 nexussean  wheel   22 Oct 21 11:48 README.md\n-rw-r--r--@  1 nexussean  wheel  147 Oct 21 11:48 opencode.jsonc\n"
+    }
+  ]
+}

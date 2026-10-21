@@ -1,0 +1,228 @@
+[
+  {
+    "id": "hold-01",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is readHead defined",
+    "expect": [
+      "packages/core/src/project/git.ts"
+    ]
+  },
+  {
+    "id": "hold-02",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is resolveProject defined",
+    "expect": [
+      "packages/core/src/project/resolve.ts"
+    ]
+  },
+  {
+    "id": "hold-03",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is describeError defined",
+    "expect": [
+      "packages/core/src/errors/index.ts"
+    ]
+  },
+  {
+    "id": "hold-04",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is estimateTokens defined",
+    "expect": [
+      "packages/retrieval/src/retrieve.ts"
+    ]
+  },
+  {
+    "id": "hold-05",
+    "repo": "opi",
+    "kind": "symbol",
+    "query": "where is toServiceError defined",
+    "expect": [
+      "packages/core/src/errors/index.ts"
+    ]
+  },
+  {
+    "id": "hold-06",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses compoundMatches",
+    "expect": [
+      "packages/retrieval/src/retrieve.ts"
+    ]
+  },
+  {
+    "id": "hold-07",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses the fileJobKey helper",
+    "expect": [
+      "packages/core/src/queue/types.ts"
+    ]
+  },
+  {
+    "id": "hold-08",
+    "repo": "opi",
+    "kind": "usage",
+    "query": "what uses the recoverAbandoned method",
+    "expect": [
+      "packages/db/src/queue.ts"
+    ]
+  },
+  {
+    "id": "hold-09",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where does the project identity get worked out",
+    "expect": [
+      "packages/core/src/project/resolve.ts"
+    ]
+  },
+  {
+    "id": "hold-10",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where are the background jobs actually run",
+    "expect": [
+      "packages/core/src/queue/worker.ts"
+    ]
+  },
+  {
+    "id": "hold-11",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where is the text search performed",
+    "expect": [
+      "packages/retrieval/src/indexer.ts"
+    ]
+  },
+  {
+    "id": "hold-12",
+    "repo": "opi",
+    "kind": "config",
+    "query": "where is the per platform data location picked",
+    "expect": [
+      "packages/db/src/paths.ts"
+    ]
+  },
+  {
+    "id": "hold-13",
+    "repo": "opi",
+    "kind": "config",
+    "query": "where are the allowed error codes enumerated",
+    "expect": [
+      "packages/core/src/errors/index.ts"
+    ]
+  },
+  {
+    "id": "hold-14",
+    "repo": "opi",
+    "kind": "config",
+    "query": "where is the schema version constant set",
+    "expect": [
+      "packages/contracts/src/index.ts"
+    ]
+  },
+  {
+    "id": "hold-15",
+    "repo": "opi",
+    "kind": "feature",
+    "query": "where are the import edges found",
+    "expect": [
+      "packages/retrieval/src/imports.ts"
+    ]
+  },
+  {
+    "id": "hold-16",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is BoardStore defined",
+    "expect": [
+      "src/board/store.ts"
+    ]
+  },
+  {
+    "id": "hold-17",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is asBoardData defined",
+    "expect": [
+      "src/board/guards.ts"
+    ]
+  },
+  {
+    "id": "hold-18",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is buildStartPrompt defined",
+    "expect": [
+      "src/tools.ts"
+    ]
+  },
+  {
+    "id": "hold-19",
+    "repo": "kanban",
+    "kind": "symbol",
+    "query": "where is resolveService defined",
+    "expect": [
+      "src/web/server.ts"
+    ]
+  },
+  {
+    "id": "hold-20",
+    "repo": "kanban",
+    "kind": "usage",
+    "query": "what uses normalizeBoard",
+    "expect": [
+      "src/board/types.ts",
+      "src/board/store.ts"
+    ]
+  },
+  {
+    "id": "hold-21",
+    "repo": "kanban",
+    "kind": "usage",
+    "query": "what uses formatCardLine",
+    "expect": [
+      "src/board/format.ts"
+    ]
+  },
+  {
+    "id": "hold-22",
+    "repo": "kanban",
+    "kind": "feature",
+    "query": "where is the board file persisted",
+    "expect": [
+      "src/board/store.ts"
+    ]
+  },
+  {
+    "id": "hold-23",
+    "repo": "kanban",
+    "kind": "feature",
+    "query": "where is the web dashboard served",
+    "expect": [
+      "src/web/server.ts"
+    ]
+  },
+  {
+    "id": "hold-24",
+    "repo": "kanban",
+    "kind": "config",
+    "query": "where are the default kanban columns declared",
+    "expect": [
+      "src/board/types.ts"
+    ]
+  },
+  {
+    "id": "hold-25",
+    "repo": "kanban",
+    "kind": "config",
+    "query": "where is the shared rpc contract published",
+    "expect": [
+      "src/rpc.ts"
+    ]
+  }
+]

@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>OPI</title>
+    <style>
+      :root {
+        --bg: #0e1116;
+        --surface: #161b22;
+        --surface-2: #1c232d;
+        --border: #2a323d;
+        --text: #d7dee8;
+        --muted: #8b96a5;
+        --faint: #5d6774;
+        --accent: #7aa2f7;
+        --ok: #7dcfff;
+        --warn: #e0af68;
+        --bad: #f7768e;
+        --radius: 10px;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.5 ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+        display: flex; flex-direction: column; overflow: hidden;
+      }
+      header {
+        display: flex; align-items: center; gap: 14px;
+        padding: 12px 18px; border-bottom: 1px solid var(--border);
+        background: var(--surface); flex: none;
+      }
+      header h1 { font-size: 15px; font-weight: 650; margin: 0; letter-spacing: .01em; }
+      header .path { color: var(--faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+      header .spacer { flex: 1; }
+      .status { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+      .status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+      .status.live .dot { background: var(--ok); box-shadow: 0 0 6px #7dcfff88; }
+      .status.down .dot { background: var(--bad); }
+      nav { display: flex; gap: 2px; padding: 0 12px; background: var(--surface); border-bottom: 1px solid var(--border); flex: none; }
+      nav button {
+        font: inherit; color: var(--muted); background: transparent; border: 0;
+        border-bottom: 2px solid transparent; padding: 9px 12px; cursor: pointer;
+      }
+      nav button.active { color: var(--text); border-bottom-color: var(--accent); }
+      main { flex: 1; overflow: auto; padding: 14px; }
+      .hidden { display: none; }
+
+      /* The board */
+      .board { display: flex; gap: 12px; height: 100%; overflow-x: auto; }
+      .column {
+        flex: 1 1 0; min-width: 250px; max-width: 420px;
+        display: flex; flex-direction: column;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); overflow: hidden;
+      }
+      .column > header { border: 0; background: transparent; padding: 10px 12px; flex: none; display: flex; align-items: baseline; gap: 8px; }
+      .column h2 { font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; margin: 0; color: var(--muted); }
+      .column .count { color: var(--faint); font-weight: 500; }
+      .cards { overflow-y: auto; padding: 0 8px 8px; display: flex; flex-direction: column; gap: 7px; }
+
+      .card {
+        background: var(--surface-2); border: 1px solid var(--border);
+        border-radius: 8px; padding: 9px 11px; cursor: pointer;
+      }
+      .card:hover { border-color: var(--accent); }
+      .card .key { font-size: 11px; color: var(--faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .card .title { margin-top: 2px; }
+      .card .meta { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+      .badge {
+        font-size: 10px; padding: 1px 6px; border-radius: 999px;
+        border: 1px solid var(--border); color: var(--muted); white-space: nowrap;
+      }
+      .badge.verified { color: var(--ok); border-color: #7dcfff44; }
+      .badge.unverified { color: var(--warn); border-color: #e0af6844; }
+      .badge.failed { color: var(--bad); border-color: #f7768e44; }
+      .badge.waiting { color: var(--warn); border-color: #e0af6844; }
+
+      /* The overview */
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+      .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 15px; }
+      .panel h3 { margin: 0 0 9px; font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+      .panel .row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-size: 13px; }
+      .panel .row .k { color: var(--muted); }
+      .panel .row .v { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; }
+      .empty { color: var(--faint); font-size: 13px; padding: 6px 0; }
+      .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+      .error { color: var(--bad); font-size: 13px; padding: 8px 0; }
+
+      /* The detail drawer */
+      .drawer {
+        position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 92vw);
+        background: var(--surface); border-left: 1px solid var(--border);
+        padding: 16px; overflow-y: auto; display: none;
+      }
+      .drawer.open { display: block; }
+      .drawer h2 { margin: 0 0 4px; font-size: 16px; }
+      .drawer .section { margin-top: 16px; }
+      .drawer .section h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
+      .drawer pre {
+        background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
+        padding: 9px; overflow-x: auto; font-size: 12px; margin: 0;
+      }
+      .close { position: absolute; top: 12px; right: 14px; }
+      .muted { color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>OPI</h1>
+      <span class="path" id="path"></span>
+      <span class="spacer"></span>
+      <span class="status" id="status"><span class="dot"></span><span id="status-text">connecting</span></span>
+    </header>
+    <nav>
+      <button data-view="overview" class="active">Overview</button>
+      <button data-view="board">Board</button>
+      <button data-view="memory">Memory</button>
+      <button data-view="quality">Quality</button>
+    </nav>
+
+    <main>
+      <section id="view-overview" class="grid"></section>
+      <section id="view-board" class="board hidden"></section>
+      <section id="view-memory" class="grid hidden"></section>
+      <section id="view-quality" class="grid hidden"></section>
+    </main>
+
+    <aside class="drawer" id="drawer">
+      <button class="ghost close" id="close-drawer">Close</button>
+      <div id="drawer-body"></div>
+    </aside>
+
+    <script>
+      const token = new URLSearchParams(location.search).get("t") ?? ""
+      const headers = { "x-opi-token": token }
+
+      const el = (tag, attrs = {}, ...children) => {
+        const node = document.createElement(tag)
+        for (const [key, value] of Object.entries(attrs)) {
+          if (key === "class") node.className = value
+          else if (key === "text") node.textContent = value
+          else if (key.startsWith("on")) node.addEventListener(key.slice(2), value)
+          else node.setAttribute(key, value)
+        }
+        for (const child of children) node.append(child)
+        return node
+      }
+
+      const api = async (path) => {
+        const response = await fetch(path, { headers })
+        if (!response.ok) throw new Error(await response.text())
+        return response.json()
+      }
+
+      const setStatus = (state, text) => {
+        const status = document.getElementById("status")
+        status.className = `status ${state}`
+        document.getElementById("status-text").textContent = text
+      }
+
+      /** The badge for a task's evidence. Never derived from its column. */
+      const evidenceBadge = (task) => {
+        if (task.verified) return el("span", { class: "badge verified", text: "verified" })
+        if (task.verification === "failed") return el("span", { class: "badge failed", text: "check failed" })
+        if (task.verification === "stale") return el("span", { class: "badge unverified", text: "evidence stale" })
+        if (task.verification === "not_run") return el("span", { class: "badge unverified", text: "not checked" })
+        if (task.verification === "waived") return el("span", { class: "badge unverified", text: "waived" })
+        return el("span", { class: "badge unverified", text: "unverified" })
+      }
+
+      const taskCard = (task, onOpen) =>
+        el(
+          "div",
+          { class: "card", onclick: () => onOpen(task.key) },
+          el("div", { class: "key", text: task.key }),
+          el("div", { class: "title", text: task.title }),
+          el(
+            "div",
+            { class: "meta" },
+            evidenceBadge(task),
+            task.waiting
+              ? el("span", {
+                  class: "badge waiting",
+                  text: `waiting for ${(task.blocked_by ?? []).join(", ")}`,
+                })
+              : null,
+          ),
+        )
+
+      const renderOverview = (data) => {
+        const view = document.getElementById("view-overview")
+        view.replaceChildren()
+        const next = data.next
+          ? el(
+              "div",
+              { class: "panel" },
+              el("h3", { text: "Next" }),
+              el("div", { class: "row" }, el("span", { class: "k", text: "task" }), el("span", { class: "v", text: next.key })),
+              el("div", { class: "row" }, el("span", { class: "k", text: "title" }), el("span", { class: "v", text: next.title })),
+              el("div", { class: "row" }, el("span", { class: "k", text: "evidence" }), el("span", { class: "v", text: next.verification })),
+            )
+          : el(
+              "div",
+              { class: "panel" },
+              el("h3", { text: "Next" }),
+              el("div", { class: "empty", text: "Nothing is ready to start." }),
+            )
+        const waiting = el(
+          "div",
+          { class: "panel" },
+          el("h3", { text: "Waiting" }),
+          ...(data.waiting.length === 0
+            ? [el("div", { class: "empty", text: "Nothing is waiting for a dependency." })]
+            : data.waiting.map((task) =>
+                el(
+                  "div",
+                  { class: "row" },
+                  el("span", { class: "k", text: task.key }),
+                  el("span", { class: "v", text: `waiting for ${(task.blocked_by ?? []).join(", ")}` }),
+                ),
+              )),
+        )
+        const index = data.index
+        const health = el(
+          "div",
+          { class: "panel" },
+          el("h3", { text: "Index" }),
+          el("div", { class: "row" }, el("span", { class: "k", text: "state" }), el("span", { class: "v", text: index.state })),
+          el("div", { class: "row" }, el("span", { class: "k", text: "files" }), el("span", { class: "v", text: String(index.files_indexed ?? 0) })),
+          el("div", { class: "row" }, el("span", { class: "k", text: "symbols" }), el("span", { class: "v", text: String(index.symbols_indexed ?? 0) })),
+          el("div", { class: "row" }, el("span", { class: "k", text: "epoch" }), el("span", { class: "v", text: String(index.epoch ?? 0) })),
+          ...(index.languages?.length
+            ? [el("div", { class: "row" }, el("span", { class: "k", text: "languages" }), el("span", { class: "v", text: index.languages.join(", ") }))]
+            : []),
+        )
+        const checks = el(
+          "div",
+          { class: "panel" },
+          el("h3", { text: "Checks" }),
+          ...(data.gates.length === 0
+            ? [el("div", { class: "empty", text: "No checks are registered for this project." })]
+            : data.gates.map((gate) =>
+                el(
+                  "div",
+                  { class: "row" },
+                  el("span", { class: "k", text: gate.id }),
+                  el("span", { class: "v", text: gate.state === "approved" ? "approved" : `${gate.state} — does not run` }),
+                ),
+              )),
+          el("div", { class: "note", text: "A check runs only when it is approved, and only when the project has turned execution on." }),
+        )
+        view.replaceChildren(next, waiting, health, checks)
+      }
+
+      const renderBoard = (data, onOpen) => {
+        const view = document.getElementById("view-board")
+        view.replaceChildren()
+        const titles = {
+          backlog: "Backlog",
+          ready: "Ready",
+          in_progress: "In Progress",
+          review: "Review",
+          done: "Done",
+        }
+        for (const column of data.columns) {
+          const tasks = data.tasks.filter((task) => task.state === column)
+          view.append(
+            el(
+              "div",
+              { class: "column" },
+              el(
+                "header",
+                {},
+                el("h2", { text: titles[column] ?? column }),
+                el("span", { class: "count", text: String(tasks.length) }),
+              ),
+              el(
+                "div",
+                { class: "cards" },
+                ...(tasks.length === 0
+                  ? [el("div", { class: "empty", text: "— " })]
+                  : tasks.map((task) => taskCard(task, onOpen))),
+              ),
+            ),
+          )
+        }
+      }
+
+      const renderMemory = (data) => {
+        const view = document.getElementById("view-memory")
+        view.replaceChildren()
+        const panel = (title, items, note) =>
+          el(
+            "div",
+            { class: "panel" },
+            el("h3", { text: title }),
+            ...(items.length === 0
+              ? [el("div", { class: "empty", text: "None." })]
+              : items.map((memory) =>
+                  el(
+                    "div",
+                    { class: "row" },
+                    el("span", { class: "k", text: memory.title }),
+                    el("span", { class: "v", text: memory.stale ? `${memory.trust} (stale)` : memory.trust }),
+                  ),
+                )),
+            note ? el("div", { class: "note", text: note }) : null,
+          )
+        view.replaceChildren(
+          panel("Decisions", data.constraints, "Confirmed by a person, or verified against a source. These may be acted on as true."),
+          panel("Proposals", data.leads, "Leads. Not constraints, and never merged into the decisions."),
+          panel("Superseded", data.superseded, "Kept for history. Not retrieved by default."),
+        )
+      }
+
+      const renderQuality = (data) => {
+        const view = document.getElementById("view-quality")
+        view.replaceChildren()
+        const gates = el(
+          "div",
+          { class: "panel" },
+          el("h3", { text: "Gates" }),
+          ...(data.gates.length === 0
+            ? [el("div", { class: "empty", text: "No checks are registered." })]
+            : data.gates.map((gate) =>
+                el(
+                  "div",
+                  { class: "row" },
+                  el("span", { class: "k", text: gate.id }),
+                  el("span", { class: "v", text: gate.state }),
+                ),
+              )),
+        )
+        const runs = el(
+          "div",
+          { class: "panel" },
+          el("h3", { text: "Runs" }),
+          ...(data.runs.length === 0
+            ? [el("div", { class: "empty", text: "No check has been run." })]
+            : data.runs.map((run) =>
+                el(
+                  "div",
+                  { class: "row" },
+                  el("span", { class: "k", text: run.gate_id }),
+                  el("span", { class: "v", text: `${run.outcome}${run.stale ? " (stale)" : ""}` }),
+                ),
+              )),
+          el("div", { class: "note", text: "A run is evidence for the code it ran against. A later change makes it stale." }),
+        )
+        const mode = el(
+          "div",
+          { class: "panel" },
+          el("h3", { text: "Execution" }),
+          el("div", { class: "row" }, el("span", { class: "k", text: "state" }), el("span", { class: "v", text: data.execution_enabled ? "on" : "off" })),
+          el("div", { class: "note", text: "Detection works without it. Execution is off by default, so a check is never run without being asked for." }),
+        )
+        view.replaceChildren(gates, runs, mode)
+      }
+
+      const openTask = async (key) => {
+        const body = document.getElementById("drawer-body")
+        body.replaceChildren(el("div", { class: "empty", text: "loading…" }))
+        document.getElementById("drawer").classList.add("open")
+        try {
+          const data = await api(`/api/task?key=${encodeURIComponent(key)}`)
+          if (!data.task) {
+            body.replaceChildren(el("div", { class: "error", text: "No such task." }))
+            return
+          }
+          const task = data.task
+          body.replaceChildren(
+            el("h2", { text: task.title }),
+            el("div", { class: "key muted", text: task.key }),
+            el("div", { class: "meta", style: "margin-top:8px" }, evidenceBadge(task)),
+            task.acceptance
+              ? el(
+                  "div",
+                  { class: "section" },
+                  el("h4", { text: "Done means" }),
+                  el("div", { class: "muted", text: task.acceptance }),
+                )
+              : null,
+            el(
+              "div",
+              { class: "section" },
+              el("h4", { text: "Evidence" }),
+              el("div", { class: "muted", text: task.verification_note ?? "" }),
+            ),
+            data.dependencies.length > 0
+              ? el(
+                  "div",
+                  { class: "section" },
+                  el("h4", { text: "Dependencies" }),
+                  ...data.dependencies.map((dep) =>
+                    el("div", { class: "row" }, el("span", { class: "k", text: dep.key }), el("span", { class: "v", text: dep.state })),
+                  ),
+                )
+              : null,
+            data.runs.length > 0
+              ? el(
+                  "div",
+                  { class: "section" },
+                  el("h4", { text: "Runs" }),
+                  ...data.runs.map((run) =>
+                    el(
+                      "div",
+                      { class: "row" },
+                      el("span", { class: "k", text: run.gate_id }),
+                      el("span", { class: "v", text: `${run.outcome}${run.stale ? " (stale)" : ""}` }),
+                    ),
+                  ),
+                )
+              : null,
+            el(
+              "div",
+              { class: "section" },
+              el("h4", { text: "History" }),
+              ...(data.events.length === 0
+                ? [el("div", { class: "empty", text: "No history." })]
+                : data.events.map((event) =>
+                    el(
+                      "div",
+                      { class: "row" },
+                      el("span", { class: "k", text: event.operation }),
+                      el("span", { class: "v", text: `${event.actor} · ${new Date(event.at).toLocaleString()}` }),
+                    ),
+                  )),
+            ),
+          )
+        } catch (error) {
+          body.replaceChildren(el("div", { class: "error", text: String(error) }))
+        }
+      }
+
+      const refresh = async () => {
+        try {
+          const [overview, board, memory, quality] = await Promise.all([
+            api("/api/overview"),
+            api("/api/board"),
+            api("/api/memory"),
+            api("/api/quality"),
+          ])
+          setStatus("live", "live")
+          document.getElementById("path").textContent = overview.root ?? ""
+          renderOverview(overview)
+          renderBoard(board, openTask)
+          renderMemory(memory)
+          renderQuality(quality)
+        } catch (error) {
+          setStatus("down", "unreachable")
+        }
+      }
+
+      for (const button of document.querySelectorAll("nav button")) {
+        button.addEventListener("click", () => {
+          for (const other of document.querySelectorAll("nav button")) other.classList.remove("active")
+          button.classList.add("active")
+          for (const section of document.querySelectorAll("main > section")) section.classList.add("hidden")
+          document.getElementById(`view-${button.dataset.view}`).classList.remove("hidden")
+        })
+      }
+      document.getElementById("close-drawer").addEventListener("click", () => {
+        document.getElementById("drawer").classList.remove("open")
+      })
+
+      refresh()
+      setInterval(refresh, 5000)
+      // The live event stream refreshes the page when the plugin's state
+      // changes, so the board is not a stale snapshot.
+      try {
+        const events = new EventSource(`/api/events?t=${encodeURIComponent(token)}`)
+        events.onmessage = () => refresh()
+      } catch {
+        // The polling above is the fallback.
+      }
+    </script>
+  </body>
+</html>

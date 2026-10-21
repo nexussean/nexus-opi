@@ -1,0 +1,17 @@
+{
+  "name": "@opi/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SQLite storage: project registry, migrations and repositories.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opi/contracts": "workspace:*",
+    "@opi/core": "workspace:*"
+  }
+}

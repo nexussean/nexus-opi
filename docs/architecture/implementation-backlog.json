@@ -1,0 +1,402 @@
+{
+  "kind": "local issue drafts; not a runtime board",
+  "issues": [
+    {
+      "id": "OPI-N01",
+      "phase": "F0",
+      "title": "Harden the existing read oracle and outcome accounting",
+      "depends_on": [],
+      "status": "implemented",
+      "scope": "Keep the current read tasks; reject key/value substring false positives and unrelated counts. Include all attempts in success rate and spend, retain all-invalid cells in task-level outcome reports, and version the oracle.",
+      "acceptance": [
+        "Negative cases reproduce the old false positives and pass after the fix.",
+        "Expected fixture facts match the actual SQLite seed.",
+        "One pass, one wrong answer, and one timeout produce 1/3 attempt success and total attempt spend divided by one success; zero successes produce null cost/success."
+      ],
+      "paths": [
+        "packages/bench/harness/oracle.ts",
+        "packages/bench/harness/run.ts",
+        "packages/bench/test/oracle.test.ts",
+        "packages/bench/test/harness.test.ts"
+      ]
+    },
+    {
+      "id": "OPI-N02",
+      "phase": "F0",
+      "title": "Finish outcome validation and freeze comparable experiments",
+      "depends_on": [
+        "OPI-N01"
+      ],
+      "status": "partial",
+      "scope": "Strengthen final-message extraction using captured versioned event fixtures; classify ambiguous prose instead of accepting keyword presence. Snapshot expectations from the authoritative seeded store before execution. Add write oracles, then run a small matched read pair before a large matrix.",
+      "acceptance": [
+        "Reasoning, earlier text, negated/contradictory statements, truncated messages, and multi-part finals cannot create a false pass.",
+        "Write checks compare before/after state, revision and event history; a pre-existing target value cannot count as a mutation. Completion checks distinguish passed, waived and not_configured evidence.",
+        "Report unknown/missing billing separately from zero; record runtime/source/prompt/oracle identities and interleave matched runs.",
+        "Product availability and same-backend schema ablation are separate experiments; neither declares a winner without comparable success."
+      ],
+      "paths": [
+        "packages/bench/harness",
+        "packages/bench/test",
+        "scripts/seed-bench-board.ts",
+        "fixtures/bench/tasks"
+      ],
+      "progress": "Implemented structured read snapshots, message-aware final extraction, four SQLite write contracts, retained per-run evidence and incomplete-usage accounting. Remaining: additional write semantics/configured-gate evidence, stable runtime/source manifests, interleaved scheduling and live pilot."
+    },
+    {
+      "id": "OPI-N03",
+      "phase": "F0",
+      "title": "Close the named security coverage gaps",
+      "depends_on": [
+        "OPI-N01"
+      ],
+      "status": "open",
+      "scope": "Turn T-01, T-02, T-03, T-04, T-11, T-12, T-13 and T-14 into explicit adversarial integration tests and a coverage register. Preserve existing T-05 through T-10 checks; do not equate unit counts with runtime isolation.",
+      "acceptance": [
+        "Two live project locations cannot leak task, memory or event data, including model-supplied internal IDs.",
+        "Omitted locations fail closed; event payload filtering happens before sensitive payload processing/persistence.",
+        "Uninstall and invalid entrypoint behavior are verified; Code Mode audit truncation is explicit."
+      ],
+      "paths": [
+        "docs/security/threat-model-v2.md",
+        "packages/adapter-opencode/test",
+        "packages/core/test"
+      ]
+    },
+    {
+      "id": "OPI-N04",
+      "phase": "F0",
+      "title": "Probe and pin runtime execution capabilities",
+      "depends_on": [],
+      "status": "open",
+      "scope": "Extend the existing V2 compatibility probe for agent/session creation, dispatch, cancellation, permission enforcement and reconnect. Verify the exact executable/package tuple; public SDK documentation alone is not acceptance evidence.",
+      "acceptance": [
+        "Capture runtime version and immutable build identity per probe/run; desktop updates cannot silently change a matrix.",
+        "Exercise child sessions and project locations, cancellation, permission denial inside Code Mode, usage fields and duplicate dispatch semantics.",
+        "Unsupported read-only enforcement or idempotency is recorded as unavailable and blocks the dependent mode."
+      ],
+      "paths": [
+        "packages/compat-spike",
+        "docs/compatibility/opencode-v2.md"
+      ]
+    },
+    {
+      "id": "OPI-N05",
+      "phase": "F1",
+      "title": "Add accountable ownership and durable execution attempts",
+      "depends_on": [
+        "OPI-N03"
+      ],
+      "status": "open",
+      "scope": "Implement ADR-0028 additively in core/db. Keep tasks, attempts and verification separate; add structured blockers/checkpoints and owner assignment with revision checks.",
+      "acceptance": [
+        "Old database migration preserves tasks, public keys, events, revisions, memory and verification; repeat migration is safe.",
+        "A task survives failed/cancelled attempts without duplicate board cards; cross-project attempt links fail.",
+        "Execution success cannot mutate verification or bypass the task completion service."
+      ],
+      "paths": [
+        "packages/core/src/task",
+        "packages/core/src/execution (new)",
+        "packages/db/src/tasks.ts",
+        "packages/db/src/execution-migrations.ts (new)"
+      ]
+    },
+    {
+      "id": "OPI-N06",
+      "phase": "F1",
+      "title": "Persist immutable plan revisions",
+      "depends_on": [
+        "OPI-N05"
+      ],
+      "status": "open",
+      "scope": "Add plan snapshots with objective, criteria, allowed scope, dependencies, content hash and revision history. Tasks reference revisions without replacing their existing acceptance text until a documented migration is adopted.",
+      "acceptance": [
+        "An approved revision cannot be edited in place.",
+        "Scope changes create a new revision; attempts retain their original revision.",
+        "Historical plans and task links survive restart and migration."
+      ],
+      "paths": [
+        "packages/core/src/planning (new)",
+        "packages/db/src/plans.ts (new)"
+      ]
+    },
+    {
+      "id": "OPI-N07",
+      "phase": "F1",
+      "title": "Implement fenced claims and writer-slot reservations",
+      "depends_on": [
+        "OPI-N05"
+      ],
+      "status": "open",
+      "scope": "Implement ADR-0029 execution claims independently from index_jobs. Claim a primary execution and workspace writer slot transactionally; support separately bounded helper claims.",
+      "acceptance": [
+        "Competing database connections/processes cannot acquire two primary claims or two conflicting writer slots.",
+        "Expired or superseded fencing tokens cannot renew, checkpoint, complete, release or fail the replacement execution.",
+        "Lease expiry changes admission authority but does not automatically assert the previous process stopped."
+      ],
+      "paths": [
+        "packages/core/src/execution (new)",
+        "packages/db/src/executions.ts (new)",
+        "packages/db/test"
+      ]
+    },
+    {
+      "id": "OPI-N08",
+      "phase": "F2",
+      "title": "Add trusted, scoped, revocable approval grants",
+      "depends_on": [
+        "OPI-N06",
+        "OPI-N03"
+      ],
+      "status": "open",
+      "scope": "Implement ADR-0030 grants through a trusted user/control path. Bind project, plan hash, operations, workspace/path scope and limits. Replace actor-string authority assumptions at autonomous waiver/dispatch boundaries.",
+      "acceptance": [
+        "An agent cannot approve by supplying a human name or replaying a grant from another project.",
+        "Plan changes, expiry and revocation invalidate grants; work within an unchanged approved scope does not prompt again.",
+        "Waivers remain visibly waived and retain trusted approval provenance."
+      ],
+      "paths": [
+        "packages/core/src/governance (new)",
+        "packages/db/src/approvals.ts (new)",
+        "packages/adapter-opencode/src/index.ts"
+      ]
+    },
+    {
+      "id": "OPI-N09",
+      "phase": "F2",
+      "title": "Reserve and reconcile execution budgets",
+      "depends_on": [
+        "OPI-N05"
+      ],
+      "status": "open",
+      "scope": "Add transactional model/provider allowlists, concurrency and spending reservations. Track known, pending and unknown usage for helpers, retries and failed attempts.",
+      "acceptance": [
+        "Concurrent admissions cannot spend the same available reservation twice.",
+        "Duplicate/late usage events are idempotent; missing usage stays unknown and does not release an uncertain reservation.",
+        "Exhausted budgets deny new work; in-flight provider costs are explicitly not a guaranteed hard cap."
+      ],
+      "paths": [
+        "packages/core/src/governance (new)",
+        "packages/db/src/budgets.ts (new)"
+      ]
+    },
+    {
+      "id": "OPI-N10",
+      "phase": "F2",
+      "title": "Implement the native runtime adapter port",
+      "depends_on": [
+        "OPI-N04",
+        "OPI-N05"
+      ],
+      "status": "open",
+      "scope": "Define adapter-neutral capabilities, dispatch, status, cancellation and usage interfaces. Implement them using the verified OpenCode V2 surface and persist project/session mapping.",
+      "acceptance": [
+        "Core imports no OpenCode types.",
+        "A session and event map to one trusted project/worktree context before use.",
+        "Unsupported capabilities fail closed; no fallback to another paid model or wider permission set."
+      ],
+      "paths": [
+        "packages/core/src/execution/runtime.ts (new)",
+        "packages/adapter-opencode/src/execution.ts (new)"
+      ]
+    },
+    {
+      "id": "OPI-N11",
+      "phase": "F2",
+      "title": "Compose transactional execution admission",
+      "depends_on": [
+        "OPI-N07",
+        "OPI-N08",
+        "OPI-N09",
+        "OPI-N10"
+      ],
+      "status": "open",
+      "scope": "Compose readiness, scope, grants, claims and reservations into one admission operation plus durable dispatch intent. Distinguish board-terminal dependencies from satisfied execution prerequisites.",
+      "acceptance": [
+        "No runtime call occurs if any check fails.",
+        "A failed admission leaves no orphan claim/reservation; an admitted intent survives restart.",
+        "Archived or unverified dependencies cannot silently satisfy an artifact/verification requirement.",
+        "Only explicitly activated modes run; recursive spawning is denied and limits include the primary."
+      ],
+      "paths": [
+        "packages/core/src/execution/admission.ts (new)",
+        "packages/db/src/executions.ts (new)"
+      ]
+    },
+    {
+      "id": "OPI-N12",
+      "phase": "F3",
+      "title": "Reconcile dispatch, cancellation and expired workers",
+      "depends_on": [
+        "OPI-N11"
+      ],
+      "status": "open",
+      "scope": "Implement bounded event wakes and deterministic liveness checks with dispatch reconciliation. Recovery is required for read-only helpers too, before managed writing is introduced.",
+      "acceptance": [
+        "Crash before dispatch, after accepted dispatch but before acknowledgement, and after result/commit never blindly launches a duplicate.",
+        "Pause/stop denies new admissions and cancels/reconciles existing sessions; ambiguous state becomes an operator-visible blocker.",
+        "No LLM is called for liveness polling; unchanged deterministic failures are not retried in a loop."
+      ],
+      "paths": [
+        "packages/core/src/execution/recovery.ts (new)",
+        "packages/adapter-opencode/src/execution.ts (new)"
+      ]
+    },
+    {
+      "id": "OPI-N13",
+      "phase": "F3",
+      "title": "Bind bounded context packages to tasks and source revisions",
+      "depends_on": [
+        "OPI-N06"
+      ],
+      "status": "open",
+      "scope": "Reuse retrieval and memory to assemble dispatch context with task/plan references, acceptance criteria, file hashes, provenance, scope and resource limits. Add delta handoffs and explicit freshness checks.",
+      "acceptance": [
+        "Changed source or plan invalidates the cached pack.",
+        "Untrusted/stale memory cannot become an execution instruction or trusted constraint.",
+        "Context stays within configured budget and includes omissions/uncertainty."
+      ],
+      "paths": [
+        "packages/retrieval/src/context.ts",
+        "packages/core/src/memory/handoff.ts",
+        "packages/core/src/execution/context.ts (new)"
+      ]
+    },
+    {
+      "id": "OPI-N14",
+      "phase": "F3",
+      "title": "Enable opt-in read-only research/review helpers",
+      "depends_on": [
+        "OPI-N12",
+        "OPI-N13",
+        "OPI-N03"
+      ],
+      "status": "open",
+      "scope": "Implement assisted mode with at most three total agents including the primary and only the existing primary allowed to write. Helpers return attributed findings through the coordinator.",
+      "acceptance": [
+        "Helper edit, unrestricted shell, task mutation, waiver, trusted-memory promotion, and recursive delegation attempts are denied.",
+        "If runtime permissions cannot enforce this, require a separately enforced environment or refuse assisted mode.",
+        "One approved dispatch produces one attributable result; helper failures cannot self-mark task completion."
+      ],
+      "paths": [
+        "packages/core/src/execution",
+        "packages/adapter-opencode/src/execution.ts (new)"
+      ]
+    },
+    {
+      "id": "OPI-N15",
+      "phase": "F3",
+      "title": "Expose execution state through existing RPC/dashboard",
+      "depends_on": [
+        "OPI-N05",
+        "OPI-N09",
+        "OPI-N12"
+      ],
+      "status": "open",
+      "scope": "Add bounded execution projections to existing RPC and views: owner, attempt/session, state, blocker, freshness, usage and cancellation status. Preserve dashboard auth and project confinement.",
+      "acceptance": [
+        "Stale observation and unknown usage are visible.",
+        "No raw reasoning or conversation is persisted as project memory.",
+        "No unsupported progress percentages; mutating controls use trusted grants and revisions."
+      ],
+      "paths": [
+        "packages/adapter-opencode/src/rpc-handlers.ts",
+        "packages/adapter-opencode/src/web"
+      ]
+    },
+    {
+      "id": "OPI-N16",
+      "phase": "F3",
+      "title": "Validate assisted mode against a single-agent baseline",
+      "depends_on": [
+        "OPI-N02",
+        "OPI-N14",
+        "OPI-N15"
+      ],
+      "status": "open",
+      "scope": "Run opt-in failure-injection and matched feature experiments. Freeze tasks, acceptance criteria, model/runtime configurations and corpus before evaluating delegation.",
+      "acceptance": [
+        "Report successful accepted work, all attempt spend/tokens, elapsed time, failures and rework.",
+        "Cross-project, forged approval, denied tool, exhausted budget, crash and cancellation scenarios pass.",
+        "Installation alone creates no child sessions or paid traffic; ordinary single-agent use remains functional offline."
+      ],
+      "paths": [
+        "fixtures/acceptance",
+        "packages/bench",
+        "docs/architecture"
+      ]
+    },
+    {
+      "id": "OPI-N17",
+      "phase": "F4",
+      "title": "Add one managed writing worker and reviewed integration",
+      "depends_on": [
+        "OPI-N16"
+      ],
+      "status": "deferred",
+      "scope": "Introduce isolated worktrees, changed-file audits, exact commit/base recording and human-approved integration. This extends recovery to code side effects.",
+      "acceptance": [
+        "Main checkout remains untouched by workers.",
+        "Unexpected writes, stale base, changed target branch and failing checks prevent integration.",
+        "Recovery inspects existing commits/artifacts before retry; cancellation does not claim rollback."
+      ],
+      "paths": [
+        "packages/core/src/execution",
+        "packages/adapter-opencode"
+      ]
+    },
+    {
+      "id": "OPI-N18",
+      "phase": "F5",
+      "title": "Enable bounded concurrent writers and integration queue",
+      "depends_on": [
+        "OPI-N17"
+      ],
+      "status": "deferred",
+      "scope": "Add scope reservations, conflict handling and a serialized integration queue only after single-writer validation.",
+      "acceptance": [
+        "Graph predictions do not replace actual changed-file checks.",
+        "Candidate/target commits are revalidated at integration; conflicts and target regressions block landing."
+      ],
+      "paths": [
+        "packages/core/src/execution"
+      ]
+    },
+    {
+      "id": "OPI-N19",
+      "phase": "F6",
+      "title": "Evaluate adaptive routing and reusable workflows",
+      "depends_on": [
+        "OPI-N16"
+      ],
+      "status": "deferred",
+      "scope": "Propose routing, decomposition and context/skill changes from verified historical outcomes; use held-out evaluations before activation.",
+      "acceptance": [
+        "Quality, cost or latency improves on a frozen equivalent baseline.",
+        "No automatic activation of an untested skill or material plan change."
+      ],
+      "paths": [
+        "packages/bench",
+        "packages/core/src/memory"
+      ]
+    },
+    {
+      "id": "OPI-N20",
+      "phase": "F7",
+      "title": "Add optional persistent local coordinator",
+      "depends_on": [
+        "OPI-N16",
+        "OPI-N17"
+      ],
+      "status": "deferred",
+      "scope": "Host the same durable protocol outside interactive sessions. Add explicit scheduled authorization, reconciliation across restarts and optional notification/external adapters.",
+      "acceptance": [
+        "No unattended work without a current grant; work is stoppable and recoverable after host restart.",
+        "External adapters do not introduce a competing task authority."
+      ],
+      "paths": [
+        "packages/coordinator (future)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@opi/bench",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Measures the tool-surface question (ADR-0018) against a fixed task set.",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@opencode/plugin": "^2.0.32"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  }
+}

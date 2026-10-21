@@ -1,0 +1,385 @@
+{
+  "shape": "pi",
+  "tools": [
+    {
+      "name": "pi.context",
+      "description": "Get the code context most likely to answer a question, with citations.\n\nReturns the smallest useful spans, each with a file, a line and why it was selected.\nThe pack is bounded by a token budget; when it is cut, that is reported.\nUse this before reading files at random, and prefer it over broad searches.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The question, in words."
+          },
+          "budget_tokens": {
+            "type": "number",
+            "description": "Token budget for the pack. Default 1500, between 300 and 6000."
+          },
+          "max_candidates": {
+            "type": "number",
+            "description": "Maximum candidates to return."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "pi.graph",
+      "description": "Query the code graph of the current project — the symbol graph.\n\naction:\n- symbol_search: find where a symbol is defined.\n- neighbors: the files linked to a symbol or file by an import.\n- references: the places that mention a name. A superset, not a proven call list.\n- callers: the same, named for what a developer wants to know.\n- importers: the files that import a file.\n- impact: the files that import or mention a symbol.\n- related_tests: test files that might cover a symbol.\n\nEvery result cites a file and a line, and says how confident it is.\nEdges are syntactic unless stated otherwise: no binding is proven.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "symbol_search",
+              "neighbors",
+              "references",
+              "callers",
+              "importers",
+              "impact",
+              "related_tests"
+            ],
+            "description": "The query to run."
+          },
+          "query": {
+            "type": "string",
+            "description": "The symbol or path the query is about."
+          },
+          "path": {
+            "type": "string",
+            "description": "Scope the query to one file."
+          },
+          "max_hops": {
+            "type": "number",
+            "description": "How far to walk. Default 2, maximum 3."
+          },
+          "max_symbols": {
+            "type": "number",
+            "description": "Maximum symbols to return. Default 50."
+          },
+          "max_files": {
+            "type": "number",
+            "description": "Maximum files to return. Default 30."
+          }
+        },
+        "required": [
+          "action",
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "pi.task",
+      "description": "Work with the project's task board — the cards, issues and work items on it.\n\nThis is the board. A card is a task: it has a title, a priority, a\nstate, acceptance criteria and verification evidence.\n\naction:\n- list: the tasks, with what each is waiting for.\n- get: one task, with its acceptance criteria and evidence.\n- create: a new task.\n- update: change a task's title, criteria, priority or type.\n- transition: move a task to another state.\n- link: relate two tasks. 'blocks' makes one wait for the other.\n- unlink: remove a relation.\n- history: what happened to a task, in order.\n- delete: remove a task, its links and its history.\n\nA task is scoped to the current project. A key like 'PI-0012' is enough.\n\nEvery task carries its verification state. A task that is done but\nunverified says so, and does not pretend otherwise. Moving a task to\n'done' needs passing checks or a recorded waiver, unless the project\nhas no check policy at all.\n\nWriting a task needs its revision: read it first, then pass the\nrevision you read. A stale revision is refused rather than overwritten.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "get",
+              "create",
+              "update",
+              "transition",
+              "link",
+              "unlink",
+              "history",
+              "delete"
+            ],
+            "description": "The operation to run."
+          },
+          "task": {
+            "type": "string",
+            "description": "The task's key, e.g. 'PI-0012'. Required for everything but list and create."
+          },
+          "title": {
+            "type": "string",
+            "description": "The task's title. For create and update."
+          },
+          "description": {
+            "type": "string",
+            "description": "What the task is about. For create and update."
+          },
+          "acceptance": {
+            "type": "string",
+            "description": "What 'done' means for this task, in the task's own words."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "feature",
+              "bug",
+              "chore",
+              "docs",
+              "refactor",
+              "test"
+            ],
+            "description": "What kind of work this is."
+          },
+          "priority": {
+            "type": "number",
+            "description": "0 (lowest) to 3 (highest)."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "backlog",
+              "ready",
+              "in_progress",
+              "review",
+              "done",
+              "archived"
+            ],
+            "description": "The state to move to. For transition."
+          },
+          "expected_revision": {
+            "type": "number",
+            "description": "The revision you read. Required for update and transition."
+          },
+          "relation": {
+            "type": "string",
+            "enum": [
+              "blocks",
+              "parent",
+              "related"
+            ],
+            "description": "How the two tasks relate. For link and unlink."
+          },
+          "other": {
+            "type": "string",
+            "description": "The other task's key. For link and unlink."
+          },
+          "waiver": {
+            "type": "object",
+            "description": "Waive the check requirement. Needs an actor, a reason and a scope."
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum tasks to return. Default 50."
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "pi.memory",
+      "description": "The project's memory: its decisions, facts and handoffs.\n\naction:\n- search: find memories. Decisions and leads are returned separately.\n- list: every memory, with its trust and whether it is stale.\n- propose: record something you noticed, with its evidence.\n- handoff: record what happened in this session, so the next one can pick it up.\n- resume: the last handoff for a task, so a session can continue.\n\nA memory's trust comes from who confirmed it, not from what it says.\nYou can propose, and you can report a handoff. You cannot confirm a\nmemory — a person does that, through the opi command line.\n\nA proposal is a lead, not a constraint. Only a confirmed decision or\na verified fact may be acted on as true.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "search",
+              "list",
+              "propose",
+              "handoff",
+              "resume"
+            ],
+            "description": "The operation to run."
+          },
+          "query": {
+            "type": "string",
+            "description": "What to search for. For search."
+          },
+          "title": {
+            "type": "string",
+            "description": "The memory's title. For propose."
+          },
+          "body": {
+            "type": "string",
+            "description": "The memory's body. For propose."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "human_decision",
+              "verified_fact",
+              "task_handoff",
+              "discovery",
+              "risk"
+            ],
+            "description": "What the memory is about. For propose."
+          },
+          "source": {
+            "type": "string",
+            "description": "The file the memory is about, relative to the project root. A memory with a source goes stale when that file changes."
+          },
+          "evidence": {
+            "type": "string",
+            "description": "The id of the thing that proves the memory. For propose."
+          },
+          "task": {
+            "type": "string",
+            "description": "The task's key. For handoff and resume."
+          },
+          "completed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What was finished. For handoff."
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What is in the way. For handoff."
+          },
+          "next_actions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What to do next. For handoff."
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum memories to return. Default 10."
+          },
+          "include_superseded": {
+            "type": "boolean",
+            "description": "Include the memories that were replaced. Default false."
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "pi.verify",
+      "description": "Verify the project: its quality checks, the verification gates and their evidence.\n\naction:\n- list_gates: the registered checks, and what can be detected.\n- propose_gates: suggest a check from what the project looks like.\n- configure_gate: change a gate's scope, timeout or the task types it is required for.\n- run: run an approved check, by its id.\n- results: the runs of a check, and whether they are still valid.\n- waive: record that a human accepted the risk of skipping a check.\n- evaluate_task: what a task's evidence says, and what is missing.\n\nA check is a reviewed command, not a string. `run` takes a gate id\nand nothing else — there is no way to hand it a command to run.\nOnly an approved gate runs, and only when the project has turned on\ncheck execution.\n\nA green run is evidence for the code it ran against. If the code\nchanges afterwards the evidence goes stale, and a stale run cannot\ncomplete a task.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list_gates",
+              "propose_gates",
+              "configure_gate",
+              "run",
+              "results",
+              "waive",
+              "evaluate_task"
+            ],
+            "description": "The operation to run."
+          },
+          "gate_id": {
+            "type": "string",
+            "description": "The gate's id. The only thing `run` accepts."
+          },
+          "task": {
+            "type": "string",
+            "description": "The task's key. For run and evaluate_task."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "typecheck",
+              "lint",
+              "test",
+              "integration_test",
+              "build",
+              "format",
+              "security_scan",
+              "custom"
+            ],
+            "description": "What the gate checks. For propose_gates."
+          },
+          "scope": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The paths the gate covers, relative to the project root. A change here makes a run stale."
+          },
+          "required_for": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The task types this gate is required for. Empty means the gate is available but not required."
+          },
+          "timeout_ms": {
+            "type": "number",
+            "description": "A hard time bound for the run."
+          },
+          "risk": {
+            "type": "string",
+            "enum": [
+              "safe",
+              "side_effecting",
+              "destructive"
+            ],
+            "description": "How much damage the gate could do."
+          },
+          "waiver": {
+            "type": "object",
+            "description": "A waiver. Needs an actor, a reason and a scope.",
+            "properties": {
+              "actor": {
+                "type": "string",
+                "description": "Who is accepting the risk."
+              },
+              "reason": {
+                "type": "string",
+                "description": "Why."
+              },
+              "scope": {
+                "type": "string",
+                "description": "What the waiver covers."
+              }
+            },
+            "required": [
+              "actor",
+              "reason",
+              "scope"
+            ],
+            "additionalProperties": false
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum runs to return. Default 10."
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "pi.status",
+      "description": "Report what OPI knows about the current project — its status, index and flags.\n\naction:\n- summary: the project, its worktree and the feature flags. Default.\n- doctor: the same, plus resolved data paths and diagnostics.\n- index_status: the freshness of the code index.\n- reindex: rebuild the code index. Only meaningful once indexing exists.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "doctor",
+              "index_status",
+              "reindex"
+            ],
+            "description": "What to report. Defaults to summary."
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  ]
+}

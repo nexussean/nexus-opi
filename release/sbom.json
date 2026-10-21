@@ -1,0 +1,161 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:c355416c-0000-0000-0000-000000000000",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-10-21T18:21:12.449Z",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "scripts/generate-sbom.ts"
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "name": "opencode-project-intelligence",
+      "version": "0.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "UNLICENSED"
+          }
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "ignore",
+      "version": "7.0.13",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f2ece57bfbc26f5f3cfc7ca1c5e835d73e01b9e46318a91d7dbd6803a5d504df"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "^7.0.13"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "tree-sitter",
+      "version": "0.21.1",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5fd12b248edb2d001e80ecc6258a4ba91292fda7fbac12e9312d72a271c691a3"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "^0.21.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "tree-sitter-go",
+      "version": "0.23.4",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e60e35a7617abf5437bd5c5c4ae622309d7b0172eb1df7a2e93c2f99659a1747"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "^0.23.4"
+        },
+        {
+          "name": "peer:tree-sitter",
+          "value": "^0.21.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "tree-sitter-typescript",
+      "version": "0.23.2",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5811f5b9d3cfa151de38afb769b3d8de3aa3dcee5407fb1bf24e47430b46adee"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "^0.23.2"
+        },
+        {
+          "name": "peer:tree-sitter",
+          "value": "^0.21.0"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "ignore",
+      "dependsOn": []
+    },
+    {
+      "ref": "tree-sitter",
+      "dependsOn": []
+    },
+    {
+      "ref": "tree-sitter-go",
+      "dependsOn": [
+        "tree-sitter"
+      ]
+    },
+    {
+      "ref": "tree-sitter-typescript",
+      "dependsOn": [
+        "tree-sitter"
+      ]
+    }
+  ]
+}

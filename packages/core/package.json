@@ -1,0 +1,17 @@
+{
+  "name": "@opi/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Application services. No dependency on OpenCode.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./test/fixtures": "./test/fixtures.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opi/contracts": "workspace:*"
+  }
+}

@@ -1,0 +1,20 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+
+# Local data
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.opi-probe.json
+.opi-probe.json.events.ndjson
+.opi-probe.json.observations.ndjson
+.bench/
+
+# Benchmark output
+fixtures/bench/results/
+
+# Generated release artifacts; retain locally or upload as CI evidence
+release/bundle/
+release/evidence/

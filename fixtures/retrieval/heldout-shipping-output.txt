@@ -1,0 +1,24 @@
+$ bun run scripts/evaluate-retrieval.ts
+Running 25 held-out queries through the shipping path
+
+  system    hit@5   prec@5  tokens(5)  tokens→ans
+  opi       0.920   0.398       135         57
+  grep      0.240   0.048         0       8872
+
+By question kind
+  config      5 queries   opi 5   grep 1
+  feature     6 queries   opi 4   grep 0
+  symbol      9 queries   opi 9   grep 4
+  usage       5 queries   opi 5   grep 1
+
+Misses
+  hold-09  where does the project identity get worked out
+     want: packages/core/src/project/resolve.ts
+     got:  packages/db/src/queue.ts, packages/contracts/src/index.ts, packages/core/src/task/types.ts, packages/core/src/queue/types.ts, packages/core/src/errors/index.ts
+  hold-22  where is the board file persisted
+     want: src/board/store.ts
+     got:  test/store.test.ts
+
+Kill criterion
+  PASS  OPI hit@5 is at least 0.9  (0.920)
+  PASS  OPI hit@5 is strictly greater than grep's  (0.920 vs 0.240)

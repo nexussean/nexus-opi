@@ -1,0 +1,41 @@
+{
+  "name": "opencode-project-intelligence",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Project-aware task state, code navigation, memory and verification for OpenCode.",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "tasks",
+    "memory",
+    "code-navigation"
+  ],
+  "license": "UNLICENSED",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "bin": {
+    "opi-dashboard": "./scripts/dashboard.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "files": [
+    "index.ts",
+    "packages",
+    "scripts",
+    "README.md",
+    "CHANGELOG.md",
+    "MANIFEST.json",
+    "LICENSE-NOTICE.md"
+  ],
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nexussean/nexus-opi.git"
+  }
+}

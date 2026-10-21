@@ -1,0 +1,94 @@
+Running 62 queries over 2 repositories
+
+Repositories
+  opi        44 files    679 symbols  187ms
+  kanban     24 files    288 symbols  110ms
+
+Results
+  system    hit@5   prec@5  tokens(5)  tokens→ans
+  opi       1.000    0.516       62.5          26
+  grep      0.726    0.322      140.5          72
+
+By question kind
+  symbol      25 queries   opi 25   grep 24
+  usage       14 queries   opi 14   grep 14
+  feature     17 queries   opi 17   grep 5
+  config       6 queries   opi 6   grep 2
+
+Misses
+  opi-13  where is the plugin entrypoint defined
+     expected: packages/adapter-opencode/src/index.ts
+     opi:      hit packages/compat-spike/src/index.ts, packages/bench/src/index.ts, packages/adapter-opencode/src/index.ts, packages/adapter-opencode/index.ts, packages/bench/index.ts
+     grep:     MISS packages/bench/harness/run.ts, packages/bench/src/index.ts, packages/core/src/status/index.ts, packages/contracts/src/index.ts, packages/adapter-opencode/test/status.test.ts
+  opi-26  where does the project identity get resolved
+     expected: packages/core/src/project/resolve.ts
+     opi:      hit packages/core/src/project/registry.ts, packages/db/src/registry.ts, packages/contracts/src/index.ts, packages/core/src/project/index.ts, packages/core/src/project/resolve.ts
+     grep:     MISS packages/bench/harness/run.ts, packages/core/test/fixtures.ts, packages/core/test/services.test.ts, packages/core/test/project.test.ts, packages/core/src/status/index.ts
+  opi-27  where is the git common directory read
+     expected: packages/core/src/project/git.ts
+     opi:      hit packages/core/src/project/git.ts, packages/contracts/src/index.ts, packages/core/src/project/resolve.ts, packages/bench/harness/run.ts, packages/core/src/status/index.ts
+     grep:     MISS packages/core/test/fixtures.ts, packages/core/test/project.test.ts, packages/core/src/project/registry.ts, packages/core/src/project/index.ts, packages/core/src/project/resolve.ts
+  opi-28  where does the sqlite database get opened
+     expected: packages/db/src/registry.ts, packages/db/src/queue.ts
+     opi:      hit packages/db/src/queue.ts, packages/db/src/registry.ts, packages/adapter-opencode/src/index.ts, packages/db/src/paths.ts, packages/bench/harness/run.ts
+     grep:     MISS packages/core/test/services.test.ts, packages/adapter-opencode/test/status.test.ts, packages/adapter-opencode/src/index.ts, packages/retrieval/src/indexer.ts, packages/db/test/queue.test.ts
+  opi-30  where does the background worker run jobs
+     expected: packages/core/src/queue/worker.ts
+     opi:      hit packages/core/src/queue/worker.ts, packages/core/src/queue/types.ts, packages/db/test/queue.test.ts, packages/db/src/queue.ts, packages/core/src/status/index.ts
+     grep:     MISS packages/core/test/services.test.ts, packages/core/src/flags/index.ts, packages/core/src/status/index.ts, packages/core/src/queue/types.ts
+  opi-32  where is the code index built
+     expected: packages/retrieval/src/indexer.ts
+     opi:      hit packages/retrieval/src/indexer.ts, packages/retrieval/src/evaluate.ts, packages/core/src/errors/index.ts, packages/bench/src/index.ts, packages/core/src/status/index.ts
+     grep:     MISS packages/bench/harness/run.ts, packages/bench/src/index.ts, packages/core/test/fixtures.ts, packages/core/test/services.test.ts, packages/core/src/errors/index.ts
+  opi-33  where are symbols extracted from the syntax tree
+     expected: packages/retrieval/src/symbols.ts
+     opi:      hit packages/retrieval/src/symbols.ts, packages/retrieval/src/indexer.ts, packages/retrieval/test/retrieval.test.ts, packages/retrieval/src/grammar.ts, packages/retrieval/src/retrieve.ts
+     grep:     MISS packages/core/src/status/index.ts, packages/retrieval/test/retrieval.test.ts, packages/retrieval/scripts/spike.ts, packages/retrieval/src/evaluate.ts, packages/retrieval/src/concept.ts
+  opi-34  where are import edges extracted
+     expected: packages/retrieval/src/imports.ts
+     opi:      hit packages/retrieval/src/imports.ts, packages/retrieval/src/indexer.ts, packages/retrieval/src/retrieve.ts, packages/retrieval/src/symbols.ts, packages/retrieval/test/retrieval.test.ts
+     grep:     MISS packages/bench/harness/run.ts, packages/bench/src/index.ts, packages/core/test/fixtures.ts, packages/core/test/services.test.ts, packages/core/test/project.test.ts
+  opi-35  where is the retrieval ranked and scored
+     expected: packages/retrieval/src/retrieve.ts
+     opi:      hit packages/retrieval/src/retrieve.ts, packages/retrieval/src/evaluate.ts, packages/retrieval/src/concept.ts, packages/retrieval/test/concept.test.ts, packages/retrieval/test/retrieval.test.ts
+     grep:     MISS packages/retrieval/test/retrieval.test.ts, packages/retrieval/scripts/heldout.ts, packages/retrieval/scripts/spike.ts, packages/retrieval/src/evaluate.ts, packages/retrieval/src/symbols.ts
+  opi-38  where is the benchmark board implemented
+     expected: packages/bench/src/index.ts
+     opi:      hit packages/bench/src/index.ts, packages/bench/harness/run.ts
+     grep:     MISS packages/bench/harness/run.ts
+  opi-39  where is the data directory chosen per platform
+     expected: packages/db/src/paths.ts
+     opi:      hit packages/adapter-opencode/src/index.ts, packages/db/src/paths.ts, packages/bench/harness/run.ts, packages/contracts/src/index.ts, packages/core/src/status/index.ts
+     grep:     MISS packages/bench/harness/run.ts, packages/core/test/services.test.ts, packages/core/src/status/index.ts, packages/core/src/project/registry.ts, packages/core/src/queue/types.ts
+  opi-40  where are the feature flag defaults defined
+     expected: packages/core/src/flags/index.ts
+     opi:      hit packages/core/src/flags/index.ts, packages/core/src/status/index.ts, packages/adapter-opencode/src/index.ts, packages/adapter-opencode/test/status.test.ts, packages/core/test/services.test.ts
+     grep:     MISS packages/core/test/fixtures.ts, packages/core/test/services.test.ts, packages/core/test/project.test.ts, packages/core/src/status/index.ts, packages/adapter-opencode/src/index.ts
+  opi-41  where is the error code list defined
+     expected: packages/core/src/errors/index.ts
+     opi:      hit packages/core/src/errors/index.ts, packages/bench/src/index.ts, packages/retrieval/src/indexer.ts, packages/db/src/queue.ts, packages/bench/harness/run.ts
+     grep:     MISS packages/bench/harness/run.ts, packages/bench/src/index.ts, packages/core/test/services.test.ts, packages/core/src/status/index.ts, packages/core/src/queue/types.ts
+  kan-15  where is the board file written
+     expected: src/board/store.ts
+     opi:      hit src/board/store.ts, test/board.test.tsx, test/store.test.ts, src/web/server.ts, src/board/types.ts
+     grep:     MISS test/store.test.ts, test/entrypoints.test.ts, test/board.test.tsx, test/web.test.ts, test/tools.test.ts
+  kan-16  where are the kanban tools registered
+     expected: src/tools.ts
+     opi:      hit test/tools.test.ts, src/tools.ts, src/index.ts, src/tui.tsx, src/command.ts
+     grep:     MISS test/store.test.ts, test/entrypoints.test.ts, test/web.test.ts, test/tools.test.ts, scripts/snapshot.tsx
+  kan-17  where is the terminal board rendered
+     expected: src/ui/board.tsx
+     opi:      hit src/board/types.ts, test/board.test.tsx, src/tui.tsx, src/ui/board.tsx, src/board/store.ts
+     grep:     MISS -
+  kan-20  where are the default columns defined
+     expected: src/board/types.ts
+     opi:      hit src/board/types.ts, src/tui.tsx, src/tools.ts, src/board/format.ts, test/store.test.ts
+     grep:     MISS test/store.test.ts, tui.tsx, index.ts, src/tui.tsx, src/index.ts
+
+Kill criterion
+  PASS  OPI hit@5 is strictly greater than grep's  (1.000 vs 0.726)
+  PASS  OPI hit@5 is at least 0.90  (1.000)
+  FAIL  OPI's median tokens are at most a third of the baseline's  (62.5 vs 140.5)
+
+  SPIKE FAILS: OPI's median tokens are at most a third of the baseline's
+

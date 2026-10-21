@@ -1,0 +1,21 @@
+{
+  "name": "@opi/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The OPI command line. The human's surface: approving gates, reading evidence.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "opi": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opi/contracts": "workspace:*",
+    "@opi/core": "workspace:*",
+    "@opi/db": "workspace:*"
+  }
+}

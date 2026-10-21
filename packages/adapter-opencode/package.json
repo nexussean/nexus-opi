@@ -1,0 +1,31 @@
+{
+  "name": "@opi/adapter-opencode",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The OpenCode plugin adapter. Registers OPI's tools against the core services.",
+  "exports": {
+    ".": "./index.ts",
+    "./rpc": "./src/rpc.ts",
+    "./web": "./src/web/server.ts"
+  },
+  "bin": {
+    "opi-dashboard": "./scripts/dashboard.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opencode/plugin": "^2.0.32",
+    "@opencode/schema": "2.0.32",
+    "@opi/contracts": "workspace:*",
+    "@opi/core": "workspace:*",
+    "@opi/db": "workspace:*",
+    "@opi/retrieval": "workspace:*"
+  },
+  "files": [
+    "index.ts",
+    "src",
+    "scripts"
+  ]
+}

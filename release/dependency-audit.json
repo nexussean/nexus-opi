@@ -1,0 +1,81 @@
+{
+  "note": "The dependency audit, computed from the INSTALLED tree rather than from the declarations. The declarations are what a package claims; the installed tree is what it has, and the tree-sitter peer conflict was invisible in the declarations.",
+  "date": "2026-10-21T18:21:12.449Z",
+  "release": {
+    "name": "opencode-project-intelligence",
+    "version": "0.1.0"
+  },
+  "source": "the release bundle's installed dependency tree",
+  "packages": [
+    {
+      "name": "ignore",
+      "version": "7.0.13",
+      "declared": "^7.0.13",
+      "licence": "MIT",
+      "direct": true,
+      "peerDependencies": {},
+      "integrity": "sha256:f2ece57bfbc26f5f3cfc7ca1c5e835d73e01b9e46318a91d7dbd6803a5d504df"
+    },
+    {
+      "name": "tree-sitter",
+      "version": "0.21.1",
+      "declared": "^0.21.1",
+      "licence": "MIT",
+      "direct": true,
+      "peerDependencies": {},
+      "integrity": "sha256:5fd12b248edb2d001e80ecc6258a4ba91292fda7fbac12e9312d72a271c691a3"
+    },
+    {
+      "name": "tree-sitter-go",
+      "version": "0.23.4",
+      "declared": "^0.23.4",
+      "licence": "MIT",
+      "direct": true,
+      "peerDependencies": {
+        "tree-sitter": "^0.21.1"
+      },
+      "integrity": "sha256:e60e35a7617abf5437bd5c5c4ae622309d7b0172eb1df7a2e93c2f99659a1747"
+    },
+    {
+      "name": "tree-sitter-typescript",
+      "version": "0.23.2",
+      "declared": "^0.23.2",
+      "licence": "MIT",
+      "direct": true,
+      "peerDependencies": {
+        "tree-sitter": "^0.21.0"
+      },
+      "integrity": "sha256:5811f5b9d3cfa151de38afb769b3d8de3aa3dcee5407fb1bf24e47430b46adee"
+    }
+  ],
+  "packageCount": 4,
+  "peerConflicts": [],
+  "declaredRangeMismatches": [],
+  "unknownLicences": [],
+  "limits": [
+    "This is a consistency audit. It checks that the installed tree is coherent, that every peer requirement is met, and that every licence is known.",
+    "It does NOT fetch a vulnerability database, and it does NOT reach the network. A vulnerability scan is a separate step and is listed as a release blocker."
+  ],
+  "steps": [
+    {
+      "step": "the installed tree is read",
+      "ok": true,
+      "detail": "4 packages under ./release/bundle/packages/retrieval/node_modules"
+    },
+    {
+      "step": "every peer requirement is met by the installed tree",
+      "ok": true,
+      "detail": "4 packages checked, none violated"
+    },
+    {
+      "step": "every installed version satisfies its declared range",
+      "ok": true,
+      "detail": "none violated"
+    },
+    {
+      "step": "every package's licence is known",
+      "ok": true,
+      "detail": "MIT"
+    }
+  ]
+}

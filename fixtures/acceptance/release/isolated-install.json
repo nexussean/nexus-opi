@@ -1,0 +1,60 @@
+{
+  "note": "The isolated packaged install: the release bundle packed into a tarball, installed into an empty directory with peer validation left on, and TypeScript, JavaScript and Go parsed from the installed tree. Nothing was published.",
+  "date": "2026-10-21T18:21:11.150Z",
+  "versions": {
+    "tree-sitter": "0.21.1",
+    "tree-sitter-typescript": "0.23.2",
+    "tree-sitter-go": "0.23.4",
+    "tree-sitter-javascript": "0.23.1"
+  },
+  "peerViolations": [],
+  "steps": [
+    {
+      "step": "the bundle packs into a tarball",
+      "ok": true,
+      "detail": "opencode-project-intelligence-0.1.0.tgz"
+    },
+    {
+      "step": "the tarball installs into an empty directory",
+      "ok": true,
+      "detail": "installed"
+    },
+    {
+      "step": "the install reports no peer conflict",
+      "ok": true,
+      "detail": "no peer warning"
+    },
+    {
+      "step": "the installed tree has the expected versions",
+      "ok": true,
+      "detail": "tree-sitter@0.21.1, tree-sitter-typescript@0.23.2, tree-sitter-go@0.23.4, tree-sitter-javascript@0.23.1"
+    },
+    {
+      "step": "every installed package's tree-sitter peer requirement is met",
+      "ok": true,
+      "detail": "none violated"
+    },
+    {
+      "step": "TypeScript parses from the installed package",
+      "ok": true,
+      "detail": "root=program (expected program), 1 named children"
+    },
+    {
+      "step": "JavaScript parses from the installed package",
+      "ok": true,
+      "detail": "root=program (expected program), 1 named children"
+    },
+    {
+      "step": "Go parses from the installed package",
+      "ok": true,
+      "detail": "root=source_file (expected source_file), 2 named children"
+    },
+    {
+      "step": "the installed plugin loads and exports a plugin",
+      "ok": true,
+      "detail": "id=opencode-project-intelligence, version=0.1.0"
+    }
+  ],
+  "passed": 9,
+  "total": 9
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@opi/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Versioned public schemas shared by the core, the plugin and the dashboard.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}
