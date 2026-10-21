@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, readFile, writeFile, rm, readdir } from "node:fs/promis
 import { join, resolve } from "node:path"
 import { tmpdir } from "node:os"
 import { createHash } from "node:crypto"
+import { npmCommand as npmFor } from "./lib/npm.ts"
 const root = resolve(import.meta.dir, "..")
 const evidence = join(root, "release/evidence")
 await mkdir(evidence, { recursive: true })
@@ -22,7 +23,14 @@ sourceFiles.sort((a,b) => a.path.localeCompare(b.path))
 const sourceDigest = createHash("sha256").update(JSON.stringify(sourceFiles)).digest("hex")
 await writeFile(join(evidence, "source-manifest.json"), JSON.stringify({ sourceDigest, files: sourceFiles }, null, 2))
 const scratch = await mkdtemp(join(tmpdir(), "opi-package-"))
-const npm = process.platform === "win32" ? "npm.cmd" : "npm"
+/**
+ * npm is run through its own entry point on Windows, because Node refuses
+ * to spawn a batch file without a shell — and running it through a shell
+ * would put npm's arguments through cmd.exe's parser.
+ */
+const npmCommand = await npmFor(root)
+const npm = npmCommand.command
+const npmArgs = (args: string[]): string[] => [...npmCommand.prefix, ...args]
 async function run(cmd: string[], cwd: string) {
   const p = Bun.spawn(cmd, { cwd, stdout: "pipe", stderr: "pipe", env: { ...process.env, npm_config_cache: join(scratch, "cache"), npm_config_fetch_retries: "0", npm_config_fetch_timeout: "30000" } })
   const [out, err, code] = await Promise.all([new Response(p.stdout).text(), new Response(p.stderr).text(), p.exited])
@@ -30,7 +38,7 @@ async function run(cmd: string[], cwd: string) {
   return out
 }
 try {
-  const packed = JSON.parse(await run([npm, "pack", "--json", "--ignore-scripts", "--pack-destination", scratch], join(root, "release/bundle")))[0]
+  const packed = JSON.parse(await run([npm, ...npmArgs(["pack", "--json", "--ignore-scripts", "--pack-destination", scratch])], join(root, "release/bundle")))[0]
   const files = new Set<string>(packed.files.map((f: any) => f.path))
 
   // The artifact's hash is the candidate's identity, so the hash has to be
@@ -104,7 +112,7 @@ try {
       installError, published: false }, null, 2))
     if (!process.argv.includes("--diagnostic-peer-tree") || !installError.includes("ERESOLVE")) throw error
     // Diagnostic graph only. Never use this switch to make the release gate pass.
-    await run([npm, "install", "--package-lock-only", "--legacy-peer-deps", "--ignore-scripts", "--no-audit", "--no-fund"], isolated)
+    await run([npm, ...npmArgs(["install", "--package-lock-only", "--legacy-peer-deps", "--ignore-scripts", "--no-audit", "--no-fund"])], isolated)
   }
   const lockText = await readFile(join(isolated, "package-lock.json"), "utf8")
   await writeFile(join(evidence, "package-lock.json"), lockText)
@@ -114,7 +122,7 @@ try {
   // one removes the SBOM.
   await rm(join(evidence, "sbom-error.json"), { force: true })
   try {
-    const sbomText = await run([npm, "sbom", "--sbom-format=cyclonedx", "--package-lock-only"], isolated)
+    const sbomText = await run([npm, ...npmArgs(["sbom", "--sbom-format=cyclonedx", "--package-lock-only"])], isolated)
     await writeFile(join(evidence, "sbom.cdx.json"), sbomText)
     sbomComplete = true
   } catch (error) {
@@ -123,7 +131,7 @@ try {
   }
   const lock = JSON.parse(lockText)
   await writeFile(join(evidence, "licenses.json"), JSON.stringify(Object.entries(lock.packages ?? {}).map(([path, c]: [string, any]) => ({ path, version: c.version, license: c.license ?? "UNKNOWN", review: "owner review pending" })), null, 2))
-  const audit = Bun.spawn([npm, "audit", "--json"], { cwd: isolated, stdout: "pipe", stderr: "pipe", env: { ...process.env, npm_config_cache: join(scratch, "cache"), npm_config_fetch_retries: "0", npm_config_fetch_timeout: "30000" } })
+  const audit = Bun.spawn([npm, ...npmArgs(["audit", "--json"])], { cwd: isolated, stdout: "pipe", stderr: "pipe", env: { ...process.env, npm_config_cache: join(scratch, "cache"), npm_config_fetch_retries: "0", npm_config_fetch_timeout: "30000" } })
   const [auditOut, auditErr, auditCode] = await Promise.all([new Response(audit.stdout).text(), new Response(audit.stderr).text(), audit.exited])
   await writeFile(join(evidence, "dependency-audit.json"), auditOut || JSON.stringify({ error: auditErr }))
   const tarBytes = await readFile(archive)

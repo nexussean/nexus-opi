@@ -35,6 +35,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { removeDirectory } from "./lib/remove.ts"
+import { npmCommand as npmFor } from "./lib/npm.ts"
 import { spawn } from "node:child_process"
 
 const REPO = resolve(import.meta.dir, "..")
@@ -124,8 +125,12 @@ try {
   // enforce peer requirements: it installed a knowingly conflicting set
   // without a word. A check that cannot fail proves nothing, so the
   // check uses the installer that actually validates peers.
-  const npm = process.platform === "win32" ? "npm.cmd" : "npm"
-  const install = await run(npm, ["install", tarball, "--no-audit", "--no-fund"], { cwd: installDir })
+  // npm is run through its own entry point on Windows, because Node
+  // refuses to spawn a batch file without a shell.
+  const npmCommand = await npmFor(REPO)
+  const npm = npmCommand.command
+  const npmArgs = (args: string[]): string[] => [...npmCommand.prefix, ...args]
+  const install = await run(npm, npmArgs(["install", tarball, "--no-audit", "--no-fund"]), { cwd: installDir })
   step(
     "the tarball installs into an empty directory",
     install.code === 0,

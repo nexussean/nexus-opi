@@ -1,6 +1,6 @@
 {
   "note": "The isolated packaged install: the release bundle packed into a tarball, installed into an empty directory with peer validation left on, and TypeScript, JavaScript and Go parsed from the installed tree. Nothing was published.",
-  "date": "2026-10-21T22:38:45.846Z",
+  "date": "2026-10-21T22:51:13.130Z",
   "versions": {
     "tree-sitter": "0.21.1",
     "tree-sitter-typescript": "0.23.2",
