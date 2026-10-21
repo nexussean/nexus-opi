@@ -18,3 +18,8 @@ fixtures/bench/results/
 # Generated release artifacts; retain locally or upload as CI evidence
 release/bundle/
 release/evidence/
+# The candidate manifest is regenerated for every build, and it names the
+# revision it was built from. Committing it would make the tree dirty the
+# moment it is regenerated, so it would never agree with the commit it
+# describes. The authoritative copy is the one the CI uploads.
+release/candidate.json
