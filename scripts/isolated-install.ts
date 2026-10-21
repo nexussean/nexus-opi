@@ -129,8 +129,20 @@ try {
   // refuses to spawn a batch file without a shell.
   const npmCommand = await npmFor(REPO)
   const npm = npmCommand.command
-  const npmArgs = (args: string[]): string[] => [...npmCommand.prefix, ...args]
-  const install = await run(npm, npmArgs(["install", tarball, "--no-audit", "--no-fund"]), { cwd: installDir })
+  /**
+   * The argv for an npm invocation.
+   *
+   * There is one of these, and every npm call goes through it, so a call
+   * site cannot forget the prefix that carries npm's own entry point on
+   * Windows.
+   */
+  const npmArgv = (args: string[]): string[] => [npm, ...npmCommand.prefix, ...args]
+  /** Run npm. The prefix travels with every call. */
+  const runNpm = (
+    args: string[],
+    options: { cwd: string; env?: Record<string, string> },
+  ) => run(npm, [...npmCommand.prefix, ...args], options)
+  const install = await runNpm(["install", tarball, "--no-audit", "--no-fund"], { cwd: installDir })
   step(
     "the tarball installs into an empty directory",
     install.code === 0,

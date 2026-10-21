@@ -30,7 +30,15 @@ const scratch = await mkdtemp(join(tmpdir(), "opi-package-"))
  */
 const npmCommand = await npmFor(root)
 const npm = npmCommand.command
-const npmArgs = (args: string[]): string[] => [...npmCommand.prefix, ...args]
+/**
+ * The argv for an npm invocation.
+ *
+ * There is one of these, and every npm call goes through it. The prefix
+ * carries npm's own entry point on Windows, and a call site that builds
+ * the argv itself can forget the prefix — which is how a call once ran
+ * `node install` and node tried to load a module called "install".
+ */
+const npmArgv = (args: string[]): string[] => [npm, ...npmCommand.prefix, ...args]
 async function run(cmd: string[], cwd: string) {
   const p = Bun.spawn(cmd, { cwd, stdout: "pipe", stderr: "pipe", env: { ...process.env, npm_config_cache: join(scratch, "cache"), npm_config_fetch_retries: "0", npm_config_fetch_timeout: "30000" } })
   const [out, err, code] = await Promise.all([new Response(p.stdout).text(), new Response(p.stderr).text(), p.exited])
@@ -38,7 +46,7 @@ async function run(cmd: string[], cwd: string) {
   return out
 }
 try {
-  const packed = JSON.parse(await run([npm, ...npmArgs(["pack", "--json", "--ignore-scripts", "--pack-destination", scratch])], join(root, "release/bundle")))[0]
+  const packed = JSON.parse(await run(npmArgv(["pack", "--json", "--ignore-scripts", "--pack-destination", scratch]), join(root, "release/bundle")))[0]
   const files = new Set<string>(packed.files.map((f: any) => f.path))
 
   // The artifact's hash is the candidate's identity, so the hash has to be
@@ -52,7 +60,7 @@ try {
   // tautology.
   const second = await mkdtemp(join(tmpdir(), "opi-repack-"))
   try {
-    await run([npm, ...npmArgs(["pack", "--ignore-scripts", "--pack-destination", second])], join(root, "release/bundle"))
+    await run(npmArgv(["pack", "--ignore-scripts", "--pack-destination", second]), join(root, "release/bundle"))
     const repacked = (await readdir(second)).filter(name => name.endsWith(".tgz"))
     const firstBytes = await readFile(join(scratch, packed.filename))
     const secondBytes = repacked.length ? await readFile(join(second, repacked[0]!)) : Buffer.alloc(0)
@@ -114,7 +122,7 @@ try {
   const isolated = join(scratch, "package")
   let isolatedImport = false, dashboardBuild = false, installError: string | undefined
   try {
-    await run([npm, "install", "--ignore-scripts", "--no-audit", "--no-fund"], isolated)
+    await run(npmArgv(["install", "--ignore-scripts", "--no-audit", "--no-fund"]), isolated)
     await run([process.execPath, "-e", 'const m = await import("./index.ts"); if (!m.default || !m.PLUGIN_VERSION) throw Error("missing plugin exports")'], isolated)
     isolatedImport = true
     await run([process.execPath, "build", "scripts/dashboard.ts", "--target=bun", "--packages=external", "--outfile=dashboard-check.js"], isolated)
@@ -130,7 +138,7 @@ try {
       installError, published: false }, null, 2))
     if (!process.argv.includes("--diagnostic-peer-tree") || !installError.includes("ERESOLVE")) throw error
     // Diagnostic graph only. Never use this switch to make the release gate pass.
-    await run([npm, ...npmArgs(["install", "--package-lock-only", "--legacy-peer-deps", "--ignore-scripts", "--no-audit", "--no-fund"])], isolated)
+    await run(npmArgv(["install", "--package-lock-only", "--legacy-peer-deps", "--ignore-scripts", "--no-audit", "--no-fund"]), isolated)
   }
   const lockText = await readFile(join(isolated, "package-lock.json"), "utf8")
   await writeFile(join(evidence, "package-lock.json"), lockText)
@@ -140,7 +148,7 @@ try {
   // one removes the SBOM.
   await rm(join(evidence, "sbom-error.json"), { force: true })
   try {
-    const sbomText = await run([npm, ...npmArgs(["sbom", "--sbom-format=cyclonedx", "--package-lock-only"])], isolated)
+    const sbomText = await run(npmArgv(["sbom", "--sbom-format=cyclonedx", "--package-lock-only"]), isolated)
     await writeFile(join(evidence, "sbom.cdx.json"), sbomText)
     sbomComplete = true
   } catch (error) {
@@ -149,7 +157,7 @@ try {
   }
   const lock = JSON.parse(lockText)
   await writeFile(join(evidence, "licenses.json"), JSON.stringify(Object.entries(lock.packages ?? {}).map(([path, c]: [string, any]) => ({ path, version: c.version, license: c.license ?? "UNKNOWN", review: "owner review pending" })), null, 2))
-  const audit = Bun.spawn([npm, ...npmArgs(["audit", "--json"])], { cwd: isolated, stdout: "pipe", stderr: "pipe", env: { ...process.env, npm_config_cache: join(scratch, "cache"), npm_config_fetch_retries: "0", npm_config_fetch_timeout: "30000" } })
+  const audit = Bun.spawn(npmArgv(["audit", "--json"]), { cwd: isolated, stdout: "pipe", stderr: "pipe", env: { ...process.env, npm_config_cache: join(scratch, "cache"), npm_config_fetch_retries: "0", npm_config_fetch_timeout: "30000" } })
   const [auditOut, auditErr, auditCode] = await Promise.all([new Response(audit.stdout).text(), new Response(audit.stderr).text(), audit.exited])
   await writeFile(join(evidence, "dependency-audit.json"), auditOut || JSON.stringify({ error: auditErr }))
   const tarBytes = await readFile(archive)
