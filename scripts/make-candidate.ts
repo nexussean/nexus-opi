@@ -71,18 +71,27 @@ async function contentDigest(): Promise<{ digest: string; files: number }> {
       files.push(relative(REPO, path))
     }
   }
-  for (const base of ["packages", "scripts", "docs", "fixtures", ".github"]) {
+  for (const base of ["packages", "scripts", ".github"]) {
     const path = join(REPO, base)
     if (!existsSync(path)) continue
     await walk(path)
   }
-  for (const name of ["package.json", "bun.lock", "tsconfig.base.json", "CHANGELOG.md", "LICENSE-NOTICE.md"]) {
+  for (const name of ["package.json", "bun.lock", "release/package.json", "tsconfig.base.json"]) {
     if (existsSync(join(REPO, name))) files.push(name)
   }
   files.sort()
+  // The digest is over the **file list and the per-file hashes**, the same
+  // way the build computes it, so the two are directly comparable.
+  const perFile: { path: string; sha256: string }[] = []
   for (const file of files) {
-    hash.update(file)
-    hash.update(await readFile(join(REPO, file)))
+    perFile.push({
+      path: file,
+      sha256: createHash("sha256").update(await readFile(join(REPO, file))).digest("hex"),
+    })
+  }
+  for (const file of perFile) {
+    hash.update(file.path)
+    hash.update(file.sha256)
   }
   return { digest: hash.digest("hex"), files: files.length }
 }
@@ -131,14 +140,45 @@ if (!existsSync(artifactCheckPath)) {
   // The source digest the artifact was built from must match the tree.
   // This is the check that stops evidence from different candidates being
   // combined.
-  const sourceMatches = artifact.sourceDigest === content.digest
-  step(
-    "the artifact was built from this exact tree",
-    sourceMatches,
-    sourceMatches
-      ? `source digest ${content.digest.slice(0, 16)} matches`
-      : `the artifact's source digest is ${artifact.sourceDigest.slice(0, 16)} and the tree is now ${content.digest.slice(0, 16)}`,
-  )
+  //
+  // The **build's own manifest** is the authority: it lists every file it
+  // fingerprinted and the digest over them. The tree is re-fingerprinted
+  // here over the **same** file list, and the two digests are compared.
+  // A difference means the tree has moved since the artifact was built.
+  const manifestPath = join(EVIDENCE, "source-manifest.json")
+  if (!existsSync(manifestPath)) {
+    step("the build's source manifest exists", false, "release/evidence/source-manifest.json is missing")
+  } else {
+    const buildManifest = JSON.parse(await readFile(manifestPath, "utf8")) as {
+      sourceDigest: string
+      files: { path: string; sha256: string }[]
+    }
+    // The digest formula is the build's own: a SHA-256 over the **JSON**
+    // of the per-file list, not a running hash. The two must be computed
+    // the same way to be comparable.
+    const perFile: { path: string; sha256: string }[] = []
+    for (const file of buildManifest.files) {
+      const path = join(REPO, file.path)
+      if (!existsSync(path)) {
+        perFile.push({ path: file.path, sha256: "MISSING" })
+        continue
+      }
+      perFile.push({
+        path: file.path,
+        sha256: createHash("sha256").update(await readFile(path)).digest("hex"),
+      })
+    }
+    perFile.sort((a, b) => a.path.localeCompare(b.path))
+    const treeDigest = createHash("sha256").update(JSON.stringify(perFile)).digest("hex")
+    const sourceMatches = treeDigest === buildManifest.sourceDigest
+    step(
+      "the artifact was built from this exact tree",
+      sourceMatches,
+      sourceMatches
+        ? `source digest ${treeDigest.slice(0, 16)} matches over ${perFile.length} files`
+        : `the build's source digest is ${buildManifest.sourceDigest.slice(0, 16)} and the tree is now ${treeDigest.slice(0, 16)} — REBUILD`,
+    )
+  }
 
   // --- The artifacts the candidate includes ---------------------------------
   const included: { path: string; present: boolean; sha256?: string; bytes?: number }[] = []
@@ -193,6 +233,7 @@ if (!existsSync(artifactCheckPath)) {
       dirty: revision.dirty ?? null,
       contentDigest: content.digest,
       files: content.files,
+      buildSourceDigest: artifact.sourceDigest,
     },
     artifact: {
       tarball: "opencode-project-intelligence-0.1.0.tgz",

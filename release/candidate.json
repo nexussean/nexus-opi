@@ -1,0 +1,129 @@
+{
+  "note": "The release candidate. Every artifact and every validation result below belongs to this source revision and this artifact hash. Evidence from different candidates must not be combined.",
+  "date": "2026-10-21T18:30:02.304Z",
+  "candidate": {
+    "name": "opencode-project-intelligence",
+    "version": "0.1.0",
+    "private": true,
+    "license": "UNLICENSED",
+    "published": false
+  },
+  "source": {
+    "revision": "05033b5fb391f2017724f2a9776538f4f1c6d0c6",
+    "branch": "main",
+    "dirty": true,
+    "contentDigest": "e4b0239b2f3406fd3675e820971ee41cba3ada9176f56a5389c4227f0e254907",
+    "files": 193,
+    "buildSourceDigest": "171ef7e8241812184be993083828bc2eb134a97fd1450e853f76368a2198a333"
+  },
+  "artifact": {
+    "tarball": "opencode-project-intelligence-0.1.0.tgz",
+    "sha256": "42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87",
+    "files": 87,
+    "status": "artifact-checks-passed"
+  },
+  "included": [
+    {
+      "path": "release/package.json",
+      "present": true,
+      "sha256": "d7cede05d6592ea1224a46b37e6090f19b12241a29e04fac8bc011f765c6de25",
+      "bytes": 808
+    },
+    {
+      "path": "bun.lock",
+      "present": true,
+      "sha256": "180b1e015d4f0a22bdffa920d93348fa36e371c2cb2e5ab07cb483c38e3979bb",
+      "bytes": 72999
+    },
+    {
+      "path": "release/sbom.json",
+      "present": true,
+      "sha256": "f6152ad9602e4020b9ae7ffe94ef0f0b2b755d2c97992b3233b4a20234d1fc24",
+      "bytes": 3169
+    },
+    {
+      "path": "release/dependency-audit.json",
+      "present": true,
+      "sha256": "68d0fed9efa19a47213db97e3d409fc94cf3062efda58613e1ba6914c39650a1",
+      "bytes": 2617
+    },
+    {
+      "path": "release/evidence/sbom.cdx.json",
+      "present": true,
+      "sha256": "b164834e167065fe735c1157ac9c0dc7fb66bf029977450fa2a0c6e15d9abe18",
+      "bytes": 246023
+    },
+    {
+      "path": "release/evidence/package-lock.json",
+      "present": true,
+      "sha256": "2565e07ba0ea3af3581aa283e3143e1fe8c9add9acf85d879194c97d7ef186f1",
+      "bytes": 137367
+    },
+    {
+      "path": "release/evidence/artifact-check.json",
+      "present": true,
+      "sha256": "d95c52c241a2343485905eac1f45af37cced95bd23d842656de18a043a9b5a5a",
+      "bytes": 512
+    },
+    {
+      "path": "release/evidence/secret-pattern-scan.json",
+      "present": true,
+      "sha256": "b5b1d70dde1d9f85bbd2adca9793303bfa0c827e64480f302725fd21b4dd6830",
+      "bytes": 116
+    },
+    {
+      "path": "release/evidence/migration-rehearsal.json",
+      "present": true,
+      "sha256": "b761b076bb7a0918ae043f605208cc338808af1160b5992b206f2c60efb1194a",
+      "bytes": 317
+    },
+    {
+      "path": "release/evidence/source-manifest.json",
+      "present": true,
+      "sha256": "06f0fc1ab0c087c2d3e4c2afdb91fd4a567d5862028a0b8688c2bf02c9d6e5ad",
+      "bytes": 28550
+    },
+    {
+      "path": "release/evidence/licenses.json",
+      "present": true,
+      "sha256": "1fc9c24cfc3e8837e3079f7a13d7d4ac0d9ad56dec5a8bd97f5aa55e952f00bb",
+      "bytes": 39656
+    }
+  ],
+  "validation": {
+    "artifactCheck": {
+      "status": "artifact-checks-passed",
+      "published": false,
+      "isolatedImport": true,
+      "sbomComplete": true,
+      "auditExitCode": 0
+    }
+  },
+  "steps": [
+    {
+      "step": "the source revision is known",
+      "ok": true,
+      "detail": "git 05033b5fb391 on main (DIRTY)"
+    },
+    {
+      "step": "the artifact's hash matches the recorded one",
+      "ok": true,
+      "detail": "sha256 42959686edcd5497"
+    },
+    {
+      "step": "the candidate is not published",
+      "ok": true,
+      "detail": "published=false"
+    },
+    {
+      "step": "the artifact was built from this exact tree",
+      "ok": true,
+      "detail": "source digest 171ef7e824181218 matches over 191 files"
+    },
+    {
+      "step": "every release artifact is present",
+      "ok": true,
+      "detail": "11 artifacts"
+    }
+  ]
+}
