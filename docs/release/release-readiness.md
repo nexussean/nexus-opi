@@ -1,12 +1,14 @@
 # Release readiness — the technical gates
 
 **Date:** 2026-10-21. **Candidate:** `opencode-project-intelligence` 0.1.0.
-**Source revision:** `86c11d3adb6f` on `main`.
+**Source revision:** `f120729` on `main`, pushed to the private
+`nexussean/nexus-opi`.
 **Artifact SHA-256:** `42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87`.
 **Published:** **no.** The candidate is `private: true` and `UNLICENSED`.
 
 **Verdict: the technical gates are met on this platform. The hosted
-three-platform CI has not run, and two owner decisions are outstanding.**
+three-platform CI was dispatched and every job was refused by the account's
+Actions billing, and the owner decisions are outstanding.**
 
 The previous report is preserved at
 [`release-readiness-before-artifact-audit.md`](release-readiness-before-artifact-audit.md).
@@ -27,7 +29,7 @@ Nothing in it was rewritten; this report adds evidence for this candidate.
 | **Recovery rehearsal** | **PASS** | 13/13 against a **copy of the real registry**. 36 project identities, 17 tasks and 19 task events preserved byte for byte; a controlled migration failure rolled back; the restore is exact; the source is unchanged. |
 | **Live final artifact** | **PASS** | 12/12. The **packaged tarball** in a real OpenCode session, with a temporary configuration, temporary project and temporary data. `fixtures/acceptance/release/live-artifact.json`. |
 | **CI rehearsal** | **PASS** | 9/9 local rehearsal of the workflow's steps, in the workflow's order. `release/evidence/ci-rehearsal.json`. |
-| **Cross-platform CI (macOS, Linux, Windows)** | **NOT RUN** | The target repository does not exist. See §3. |
+| **Cross-platform CI (macOS, Linux, Windows)** | **BLOCKED — account billing** | The repository was created (private), the branch pushed and the workflow dispatched. All six jobs were refused by GitHub: *"recent account payments have failed or your spending limit needs to be increased."* See §3. |
 | **T-13 live validation** | **NOT RUN** | The experimental Code Mode audit is disabled, as the plan requires. See §4. |
 | **Registry identity** | **BLOCKED — owner** | The package name and scope are undecided. |
 | **Licensing** | **BLOCKED — owner** | The candidate is `UNLICENSED`. No licence was selected. |
@@ -49,7 +51,7 @@ Every command, and what it returned.
 | `bun run scripts/rehearse-migration.ts --source <copy>` | **exit 0** — 13/13 steps. |
 | `bun run scripts/live-artifact-test.ts` | **exit 0** — 12/12 steps. |
 | `bun run release:ci-rehearsal` | **exit 0** — 9/9 steps. |
-| `bun run scripts/make-candidate.ts` | **exit 0** — 6/6 steps. The source digest matches the tree over 193 files. |
+| `bun run scripts/make-candidate.ts` | **exit 0** — 6/6 steps. The source digest matches the tree over 193 source files, and the candidate covers 195 files. |
 
 ### The live artifact test, in detail
 
@@ -76,45 +78,69 @@ cross-platform live compatibility, and it does not claim to.
 
 ---
 
-## 3. The cross-platform CI gate — a precise access blocker
+## 3. The cross-platform CI gate — dispatched, and blocked by the account
 
-**The target repository `nexussean/nexus-opi` does not exist.**
+**The repository was created (private), the branch was pushed, and the
+workflow was dispatched. The jobs did not start.**
 
 | Check | Result |
 |---|---|
-| `GET api.github.com/repos/nexussean/nexus-opi` | **404** |
-| `gh repo view nexussean/nexus-opi` | `Could not resolve to a Repository` |
-| `GET api.github.com` | **200** — the API is reachable |
-| `gh auth status` | **Authenticated** as `nexussean` |
-| The account's 20 repositories | `nexus-opi` is **not** among them |
+| `gh repo create nexussean/nexus-opi --private` | Created. `visibility: PRIVATE`, `isPrivate: true` |
+| `git push -u origin main` | Pushed. 279 files; no database, key or `.env` file was pushed |
+| `gh workflow list` | `Release checks (no publication)` — **active** |
+| `gh api …/actions/permissions` | `enabled: true` |
+| The workflow dispatch | Run `39669805379` |
+| The push-triggered run | Run `39669757531` |
+| **All six jobs, both runs** | **failure** — and they never started |
 
-So the blocker is **not** network access and **not** authentication. It is
-that the repository has never been created.
+GitHub's own annotation, on every job:
 
-**The work is prepared and reviewable.** The workflow
-(`.github/workflows/release-checks.yml`) is complete: it runs on
-`ubuntu-latest`, `macos-latest` and `windows-latest` with `fail-fast:
-false`, so one platform's failure does not cancel the others' evidence; it
-runs the typecheck, the suite, the pilot, the recovery rehearsal, the build,
-the isolated install with the installed parsers, the dependency audit and
-the SBOM, the artifact check, and the candidate manifest; it records the
-runtime versions, the revision and the dependency information; and it
-uploads the per-platform evidence **whatever happened**. It has
-`permissions: contents: read` and **no publication job**.
+> The job was not started because recent account payments have failed or
+> your spending limit needs to be increased. Please check the 'Billing &
+> plans' section in your settings.
 
-**Creating the repository is an owner decision, and the instructions were
-explicit: do not create a public repository or expose this private,
-unlicensed project.** So the repository was not created, the branch was not
-pushed, and hosted CI was not dispatched.
+**This is an account-level billing or spending-limit condition, not a
+workflow, code, or configuration problem.** The evidence that it is not the
+workflow:
 
-**What is needed to close the gate**, precisely:
+- The workflow is **active** and GitHub accepted the dispatch.
+- The jobs failed in **2 seconds**, before any runner was allocated — a
+  workflow defect produces a *failed step* with output, not a refusal to
+  start.
+- The workflow file is the same one the **local rehearsal** ran end to end,
+  9/9, in the workflow's order.
+- The account's Actions API reports `enabled: true`.
 
-1. **Authorisation** to create a repository under `nexussean`, and its
-   **visibility**. A private repository is the safe choice for an
-   unlicensed project: it lets the CI run, and it exposes nothing.
-2. **Push authorisation** for the branch `main` at revision `86c11d3`.
-3. **Actions enabled** on the repository, with the workflow's read-only
-   permission set as the default.
+The account's billing details could not be read to say which half of the
+cause applies: the API needs the `user` scope, and the token carries
+`gist, read:org, repo, workflow`. The message names both possibilities.
+
+### What closes it
+
+For a **private** repository, GitHub Actions bills against the account's
+**spending limit**, and a limit of $0 refuses to start any job. The owner
+must do one of:
+
+1. **Resolve the payment failure** and raise the Actions **spending limit**
+   above $0 — the private repository then runs, and nothing is exposed.
+2. **Make the repository public**, where Actions are free — but that
+   **exposes an unlicensed project**, and it is what the earlier
+   instructions ruled out.
+
+Option 1 is the one that keeps the project private. The repository stays
+private as it stands.
+
+### The workflow is prepared and reviewable
+
+`.github/workflows/release-checks.yml` runs on `ubuntu-latest`,
+`macos-latest` and `windows-latest` with `fail-fast: false`, so one
+platform's failure does not cancel the others' evidence. It runs the
+typecheck, the suite, the pilot, the recovery rehearsal, the build, the
+isolated install with the installed parsers, the dependency audit and the
+SBOM, the artifact check, and the candidate manifest; it records the runtime
+versions, the revision and the dependency information; and it uploads the
+per-platform evidence **whatever happened**. It has `permissions: contents:
+read` and **no publication job**.
 
 The local rehearsal (`release/evidence/ci-rehearsal.json`) ran **all nine
 steps of the workflow, in the workflow's order, on this platform**, and all
@@ -193,7 +219,7 @@ the check **fails** if the tree has moved since the artifacts were built.
 
 | | |
 |---|---|
-| Source revision | `86c11d3adb6f` on `main` |
+| Source revision | `f1207291401f` on `main`, pushed to the private `nexussean/nexus-opi` |
 | Build source digest | `fcac726c6b340156…` over **195** files, matching the tree |
 | Artifact SHA-256 | `42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87` |
 | Files in the artifact | 87 |
@@ -270,7 +296,7 @@ become optional, and a registry fault is not recorded as a pass.
 
 | # | Blocker | What closes it |
 |---|---|---|
-| **T-1** | **Cross-platform CI has not run.** The repository does not exist. | An owner decision to create it (private), then push and dispatch. The workflow is ready. |
+| **T-1** | **Cross-platform CI was dispatched and every job was refused.** GitHub: *"recent account payments have failed or your spending limit needs to be increased."* | An owner action in **Billing & plans**: resolve the payment failure and raise the Actions **spending limit** above $0. The repository is private and stays that way. |
 | **T-2** | **The live T-13 audit has not been validated.** | A live Code Mode session with `OPI_AUDIT_LOG` set. Only required if complete T-13 auditing is in P8's scope. |
 | **T-3** | **The recovery rehearsal could not exercise a non-empty memory or verification table.** The owner's registry has none. | A database with populated memory and verification tables. |
 | **T-4** | **Only macOS has been exercised.** | The hosted matrix. |
@@ -282,7 +308,7 @@ become optional, and a registry fault is not recorded as a pass.
 |---|---|---|
 | **O-1** | **The registry identity**: the package name and the scope. | The candidate is a placeholder. It needs a scope the owner controls. |
 | **O-2** | **The licence.** | The candidate is `UNLICENSED` and `private: true`. No licence was selected and none was invented. |
-| **O-3** | **The repository's visibility**, and whether to create it at all. | A public repository would expose an unlicensed project. |
+| **O-3** | **Whether to keep the repository private** at the cost of a spending limit, or make it public so Actions are free. | A public repository would expose an unlicensed project. It was created **private**. |
 | **O-4** | **The retrieval token criterion.** | The spike missed its own 1/3 bar; the shipping path clears the plan's 15% target by 4×. |
 | **O-5** | **The kanban plugin's fate** — absorb it or ship it separately. | It competes for the same board queries. |
 
@@ -302,8 +328,10 @@ become optional, and a registry fault is not recorded as a pass.
 - **Nothing was published.** `published: false`; the candidate is `private:
   true` and `UNLICENSED`; the user's `~/.config/opencode` is unchanged; the
   bundle is not in it; the real registry's mtime is unchanged.
-- **No repository was created**, and nothing was pushed. The target does not
-  exist, and the instructions were explicit.
+- **The repository was created PRIVATE**, the branch was pushed, and the
+  workflow was dispatched — all authorised by the owner. It is private, and
+  **publication remains disabled**: the package is `private: true` and
+  `UNLICENSED`, the workflow has no publish job, and `published: false`.
 - **The shipping schema default was not changed.**
 - **No optimisation matrix was run.**
 - **No real user configuration or data was modified.** The live test used a
