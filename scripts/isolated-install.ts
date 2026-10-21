@@ -59,6 +59,9 @@ async function run(
     const child = spawn(command, args, {
       cwd: options.cwd,
       env: { ...process.env, ...(options.env ?? {}) },
+      // The pipes must be **asked for**: without them the child's output
+      // goes nowhere and the parent's `child.stdout` is null.
+      stdio: ["ignore", "pipe", "pipe"],
     })
     let out = ""
     let err = ""
@@ -100,7 +103,13 @@ try {
   )
   // The install is the point: **no** `--legacy-peer-deps`, no `overrides`,
   // no `peerDependenciesMeta`. The installer is left to do its job.
-  const install = await run("bun", ["add", tarball], { cwd: installDir })
+  //
+  // And the installer is **npm**, not Bun. Bun's installer does **not**
+  // enforce peer requirements: it installed a knowingly conflicting set
+  // without a word. A check that cannot fail proves nothing, so the
+  // check uses the installer that actually validates peers.
+  const npm = process.platform === "win32" ? "npm.cmd" : "npm"
+  const install = await run(npm, ["install", tarball, "--no-audit", "--no-fund"], { cwd: installDir })
   step(
     "the tarball installs into an empty directory",
     install.code === 0,
@@ -108,8 +117,10 @@ try {
   )
   step(
     "the install reports no peer conflict",
-    !/peer/i.test(install.err) || /peer.*(resolv|install)/i.test(install.err),
-    /peer/i.test(install.err) ? install.err.slice(0, 300) : "no peer warning",
+    install.code === 0 && !/ERESOLVE|peer dep|Conflicting peer/i.test(install.err + install.out),
+    install.code === 0
+      ? "npm resolved the tree with peer validation on"
+      : install.err.slice(0, 300) || install.out.slice(0, 300),
   )
 
   // --- 3. The installed tree ----------------------------------------------

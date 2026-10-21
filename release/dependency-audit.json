@@ -1,6 +1,6 @@
 {
   "note": "The dependency audit, computed from the INSTALLED tree rather than from the declarations. The declarations are what a package claims; the installed tree is what it has, and the tree-sitter peer conflict was invisible in the declarations.",
-  "date": "2026-10-21T18:21:12.449Z",
+  "date": "2026-10-21T18:36:20.566Z",
   "release": {
     "name": "opencode-project-intelligence",
     "version": "0.1.0"

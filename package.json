@@ -20,7 +20,10 @@
     "release:recovery": "bun run scripts/rehearse-migration.ts",
     "release:isolated": "bun run scripts/isolated-install.ts",
     "release:sbom": "bun run scripts/generate-sbom.ts",
-    "release:audit": "bun run scripts/generate-sbom.ts"
+    "release:audit": "bun run scripts/generate-sbom.ts",
+    "release:ci-rehearsal": "bun run scripts/rehearse-ci.ts",
+    "release:candidate": "bun run scripts/make-candidate.ts",
+    "release:live": "bun run scripts/live-artifact-test.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -28,5 +31,11 @@
   },
   "engines": {
     "bun": ">=1.2.0"
-  }
+  },
+  "trustedDependencies": [
+    "tree-sitter",
+    "tree-sitter-go",
+    "tree-sitter-javascript",
+    "tree-sitter-typescript"
+  ]
 }

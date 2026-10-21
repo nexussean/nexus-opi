@@ -1,6 +1,6 @@
 {
   "note": "The release acceptance pilot: the plan's MVP shipping checklist, run in a sandbox with a temporary data directory. Nothing was published, and the user's real installation was not touched.",
-  "date": "2026-10-21T18:21:12.636Z",
+  "date": "2026-10-21T18:36:13.459Z",
   "steps": [
     {
       "step": "two projects resolve, with different identities",
@@ -60,7 +60,7 @@
     {
       "step": "the user's code is byte-identical after the plugin is disabled",
       "ok": true,
-      "detail": "sha256 4854359b6d5969c2"
+      "detail": "sha256 1b54db0bd6686994"
     },
     {
       "step": "the app-owned data is retained after the plugin is disabled",

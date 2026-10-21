@@ -88,6 +88,12 @@
       },
     },
   },
+  "trustedDependencies": [
+    "tree-sitter",
+    "tree-sitter-go",
+    "tree-sitter-typescript",
+    "tree-sitter-javascript",
+  ],
   "packages": {
     "@ai-sdk/provider": ["@ai-sdk/provider@3.0.8", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ=="],
 

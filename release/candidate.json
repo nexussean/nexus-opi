@@ -1,6 +1,6 @@
 {
   "note": "The release candidate. Every artifact and every validation result below belongs to this source revision and this artifact hash. Evidence from different candidates must not be combined.",
-  "date": "2026-10-21T18:30:02.304Z",
+  "date": "2026-10-21T18:36:38.224Z",
   "candidate": {
     "name": "opencode-project-intelligence",
     "version": "0.1.0",
@@ -9,12 +9,12 @@
     "published": false
   },
   "source": {
-    "revision": "05033b5fb391f2017724f2a9776538f4f1c6d0c6",
+    "revision": "29a0cc38dd78a5da376b2458ac4bf9e412c94c1e",
     "branch": "main",
     "dirty": true,
-    "contentDigest": "e4b0239b2f3406fd3675e820971ee41cba3ada9176f56a5389c4227f0e254907",
-    "files": 193,
-    "buildSourceDigest": "171ef7e8241812184be993083828bc2eb134a97fd1450e853f76368a2198a333"
+    "contentDigest": "4406c6dfbdb5ca77f181a96fc3de8be4251aa55c8008c0bd92f056c13681db30",
+    "files": 194,
+    "buildSourceDigest": "dfac49dd263b8991f3bcff278eb4f35bc7e4d0e0da1787730ddf1339833826c1"
   },
   "artifact": {
     "tarball": "opencode-project-intelligence-0.1.0.tgz",
@@ -32,25 +32,25 @@
     {
       "path": "bun.lock",
       "present": true,
-      "sha256": "180b1e015d4f0a22bdffa920d93348fa36e371c2cb2e5ab07cb483c38e3979bb",
-      "bytes": 72999
+      "sha256": "dbb710f149a3d961052806926ba7c99ebdef8580c909bbaf7217f7a9bc73c5bd",
+      "bytes": 73132
     },
     {
       "path": "release/sbom.json",
       "present": true,
-      "sha256": "f6152ad9602e4020b9ae7ffe94ef0f0b2b755d2c97992b3233b4a20234d1fc24",
+      "sha256": "a0789f4200cd3c808a2f0b3bfa0d1718c68da6a1a0a22ef33e475310d82b1252",
       "bytes": 3169
     },
     {
       "path": "release/dependency-audit.json",
       "present": true,
-      "sha256": "68d0fed9efa19a47213db97e3d409fc94cf3062efda58613e1ba6914c39650a1",
+      "sha256": "e205bba3b8323b7b5c48b87dd1ec574841d5389371bda7893d80a509754dc39c",
       "bytes": 2617
     },
     {
       "path": "release/evidence/sbom.cdx.json",
       "present": true,
-      "sha256": "b164834e167065fe735c1157ac9c0dc7fb66bf029977450fa2a0c6e15d9abe18",
+      "sha256": "4e5992a92877ad042f31cba7d1319b8d93981f0fc7655bfb11fb5059c39e4e5d",
       "bytes": 246023
     },
     {
@@ -62,7 +62,7 @@
     {
       "path": "release/evidence/artifact-check.json",
       "present": true,
-      "sha256": "d95c52c241a2343485905eac1f45af37cced95bd23d842656de18a043a9b5a5a",
+      "sha256": "802587457a0d09867c8a3ad2219cac33a26c0a13afded75ee34f353fc64735d3",
       "bytes": 512
     },
     {
@@ -80,8 +80,8 @@
     {
       "path": "release/evidence/source-manifest.json",
       "present": true,
-      "sha256": "06f0fc1ab0c087c2d3e4c2afdb91fd4a567d5862028a0b8688c2bf02c9d6e5ad",
-      "bytes": 28550
+      "sha256": "292c79fd3ed60498452ea1bc8e037ea301bbc31be225ec45e3da918424e83f8b",
+      "bytes": 28686
     },
     {
       "path": "release/evidence/licenses.json",
@@ -103,7 +103,7 @@
     {
       "step": "the source revision is known",
       "ok": true,
-      "detail": "git 05033b5fb391 on main (DIRTY)"
+      "detail": "git 29a0cc38dd78 on main (DIRTY)"
     },
     {
       "step": "the artifact's hash matches the recorded one",
@@ -118,7 +118,7 @@
     {
       "step": "the artifact was built from this exact tree",
       "ok": true,
-      "detail": "source digest 171ef7e824181218 matches over 191 files"
+      "detail": "source digest dfac49dd263b8991 matches over 192 files"
     },
     {
       "step": "every release artifact is present",

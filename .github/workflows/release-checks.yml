@@ -1,4 +1,8 @@
 name: Release checks (no publication)
+
+# The workflow runs the **whole** release gate on **all three** platforms.
+# A platform is never made optional, and a test is never skipped to obtain
+# a green result: a failure is a finding, and the finding is reported.
 on:
   pull_request:
   push:
@@ -6,33 +10,110 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '23 5 * * *'
+
+# Read-only. There is deliberately **no** publication job, and no job that
+# can write to the repository.
 permissions:
   contents: read
+
 jobs:
   validate:
+    name: ${{ matrix.os }}
     strategy:
+      # Every platform must pass. `fail-fast: false` so one platform's
+      # failure does not cancel the others: a cancelled platform produces
+      # no evidence, and all three results are needed.
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.2'
+
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: bun install --frozen-lockfile
-      - run: bun run check
-      - run: bun run release:pilot
-      - run: bun run release:recovery
-      - run: bun run release:build
-      - run: bun run release:verify
+
+      # The runtime's identity, for the evidence.
+      - name: Record the environment
+        run: |
+          mkdir -p release/evidence
+          {
+            echo "{\"os\":\"${{ matrix.os }}\",\"arch\":\"$(uname -m)\",\"bun\":\"$(bun --version)\",\"node\":\"$(node --version)\",\"git\":\"$(git --version)\",\"revision\":\"$(git rev-parse HEAD)\",\"npm\":\"$(npm --version)\"}"
+          } > release/evidence/platform.json
+          cat release/evidence/platform.json
+
+      # The native grammars build their addon through node-gyp-build, and
+      # Bun blocks lifecycle scripts by default. The trust list is
+      # **explicit** and in the root package's `trustedDependencies`: the
+      # four native tree-sitter packages and nothing else. It is not a
+      # blanket "trust everything".
+      - name: Install the workspace
+        run: |
+          bun install --frozen-lockfile
+          bun pm untrusted
+
+      - name: Typecheck and test
+        run: bun run check
+
+      - name: The acceptance pilot
+        run: bun run release:pilot
+
+      - name: The recovery rehearsal
+        run: bun run release:recovery
+
+      - name: Build the release bundle
+        run: bun run release:build
+
+      # The installed-parser check and the dependency audit. Both are part of
+      # the gate: the isolated install is what a user does, and the audit is
+      # computed from the installed tree.
+      - name: The isolated install and the installed parsers
+        run: bun run release:isolated
+
+      - name: The dependency audit and the SBOM
+        run: bun run release:sbom
+
+      # The artifact check: pack, inspect, extract outside the repository,
+      # install with **normal peer validation**, import the plugin, build the
+      # launcher, generate the SBOM and the audit. It uses npm, which is the
+      # installer that actually enforces peer requirements.
+      - name: The release artifact check
+        run: bun run release:verify
+
+      # The candidate manifest ties the evidence to this revision and this
+      # artifact hash, and fails if the tree moved during the run.
+      - name: The candidate manifest
+        run: bun run scripts/make-candidate.ts
+
+      # Per-platform evidence, whatever happened.
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: release-evidence-${{ matrix.os }}
-          path: release/evidence/
+          path: |
+            release/evidence/
+            release/candidate.json
           if-no-files-found: warn
+          retention-days: 30
+
+      # The job's own log, so a failure can be read without re-running.
+      - name: The job log
+        if: always()
+        run: |
+          mkdir -p release/evidence
+          echo "os=${{ matrix.os }}" > release/evidence/job.txt
+          echo "revision=$(git rev-parse HEAD)" >> release/evidence/job.txt
+          echo "bun=$(bun --version)" >> release/evidence/job.txt
+          echo "node=$(node --version)" >> release/evidence/job.txt
+          echo "npm=$(npm --version)" >> release/evidence/job.txt
