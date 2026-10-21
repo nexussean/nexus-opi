@@ -92,7 +92,25 @@ try {
   await writeFile(join(evidence, "secret-pattern-scan.json"), JSON.stringify({ scope: "packed first-party text; limited pattern scan, not comprehensive secret detection", findings }, null, 2))
   if (findings.length) throw new Error("Potential credentials found in packed files; see secret-pattern-scan.json")
   const archive = join(scratch, packed.filename)
-  await run(["tar", "-xzf", archive, "-C", scratch], scratch)
+  // The archive is piped in rather than named on the command line.
+  //
+  // On Windows a path like `C:\Users\...` is read by tar as a **host
+  // and a path** — the `host:path` form for a remote archive — so tar
+  // tried to connect to a host called "C". Piping the bytes in gives the
+  // archive no name to misread, and it is the same on every platform.
+  const extract = Bun.spawn(["tar", "-xz", "-C", scratch], {
+    cwd: scratch,
+    stdin: await readFile(archive),
+    stdout: "pipe",
+    stderr: "pipe",
+  })
+  const [extractErr, extractCode] = await Promise.all([
+    new Response(extract.stderr).text(),
+    extract.exited,
+  ])
+  if (extractCode) {
+    throw new Error(`The tarball could not be extracted (${extractCode}): ${extractErr.trim()}`)
+  }
   const isolated = join(scratch, "package")
   let isolatedImport = false, dashboardBuild = false, installError: string | undefined
   try {
