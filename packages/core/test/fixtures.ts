@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 
 /** Commit as a fixed identity so fixtures are deterministic. */
 const GIT_ENV = {
@@ -22,26 +22,10 @@ function gitExecutable(): string {
   return process.platform === "win32" ? "git.exe" : "git"
 }
 
-/**
- * The environment for a git subprocess.
- *
- * Windows spells the variable `Path`, and spreading `process.env`
- * preserves that spelling. A spawn that looks for `PATH` — which is what
- * the executable search does — then finds nothing, and the spawn fails
- * with `ENOENT` even though git is installed. So the key is normalised.
- */
-function gitEnvironment(): Record<string, string> {
-  const env: Record<string, string> = { ...process.env, ...GIT_ENV }
-  const path = env.PATH ?? env.Path ?? process.env.PATH ?? process.env.Path ?? ""
-  env.PATH = path
-  env.Path = path
-  return env
-}
-
 export async function git(args: string[], cwd: string): Promise<string> {
   const proc = Bun.spawn([gitExecutable(), ...args], {
     cwd,
-    env: gitEnvironment(),
+    env: { ...process.env, ...GIT_ENV },
     stdout: "pipe",
     stderr: "pipe",
   })
@@ -82,7 +66,11 @@ export async function makeWorktree(repo: string, path: string, branch = "feature
 
 /** A separate clone of `source`. Same origin, different project. */
 export async function makeClone(source: string, path: string): Promise<string> {
-  await git(["clone", "-q", source, path], path.replace(/\/[^/]+$/, "") || "/")
+  // `dirname`, not a regular expression: the separator is the platform's,
+  // and the POSIX-only expression left the whole path as the working
+  // directory — a directory that does not exist yet, so the spawn failed
+  // with ENOENT.
+  await git(["clone", "-q", source, path], dirname(path) || "/")
   return path
 }
 
