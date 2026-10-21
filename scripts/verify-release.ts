@@ -128,6 +128,14 @@ try {
   await writeFile(join(evidence, "dependency-audit.json"), auditOut || JSON.stringify({ error: auditErr }))
   const tarBytes = await readFile(archive)
   await writeFile(join(evidence, packed.filename), tarBytes)
+  // A tarball from an earlier name or version is removed. Two artifacts in
+  // the evidence directory is one artifact too many: a reader cannot tell
+  // which one the evidence is about, and the CI upload would ship both.
+  for (const stale of await readdir(evidence)) {
+    if (stale.endsWith(".tgz") && stale !== packed.filename) {
+      await rm(join(evidence, stale), { force: true })
+    }
+  }
   const report = { version: packed.version, name: packed.name, platform: process.platform, arch: process.arch,
     bun: Bun.version, tarball: packed.filename, sha256: createHash("sha256").update(tarBytes).digest("hex"),
     sourceDigest, files: files.size, isolatedImport, dashboardBuild, installError, sbomComplete, diagnosticPeerTree: Boolean(installError), auditExitCode: auditCode,

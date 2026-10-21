@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:f04745a3-0000-0000-0000-000000000000",
+  "serialNumber": "urn:uuid:74056ae7-0000-0000-0000-000000000000",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-10-21T20:52:39.792Z",
+    "timestamp": "2026-10-21T22:22:02.086Z",
     "tools": {
       "components": [
         {
@@ -29,6 +29,255 @@
   "components": [
     {
       "type": "library",
+      "name": "@ai-sdk/provider",
+      "version": "3.0.8",
+      "scope": "optional",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "61b8f2b9f31a6de6c1337ffe984a781d4eb3eedc9f34c1ff1d74cd7850f51d39"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "not declared"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@opencode/ai",
+      "version": "2.1.2",
+      "scope": "optional",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "39edcc5e12efb3f8236873f7f998e7a89505ebec5bb818938474bc224b5e4627"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "not declared"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@opencode/client",
+      "version": "2.1.2",
+      "scope": "optional",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9ad0de1519544f93dc0e92ce205c6983cd459e0746720fdc383530a090f02bfc"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "not declared"
+        },
+        {
+          "name": "peer:effect",
+          "value": "4.0.1"
+        },
+        {
+          "name": "peer:solid-js",
+          "value": ">=1.9.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@opencode/plugin",
+      "version": "2.1.2",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "424dcc0a1d2c6d3317cc81955cb6c200ff05a46451b14f1670aaa573b6a58c12"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "^2.0.32"
+        },
+        {
+          "name": "peer:@opencode/theme",
+          "value": "2.1.2"
+        },
+        {
+          "name": "peer:@opentui/core",
+          "value": ">=0.6.6"
+        },
+        {
+          "name": "peer:@opentui/solid",
+          "value": ">=0.6.6"
+        },
+        {
+          "name": "peer:solid-js",
+          "value": ">=1.9.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@opencode/protocol",
+      "version": "2.1.2",
+      "scope": "optional",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c2c19d290348d07c3b54c5ae72efb9fec4a0eda283eaa6df328452c5dcc47ae9"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "not declared"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@opencode/schema",
+      "version": "2.0.32",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "005c9b9b8dacfe1e1b02133a3063d35eec57c26c0f7af5fd374a3a1f864590f5"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "2.0.32"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@opencode/util",
+      "version": "2.1.2",
+      "scope": "optional",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d19389f2dfce5e3c054565dbe1f58e444796e74cb9defecb938ec7643fe4db4e"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "not declared"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@standard-schema/spec",
+      "version": "1.1.0",
+      "scope": "optional",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "278468d78e81b06e1b636ac89d01d7033783c6f5a40820bcf90bc01fa9efbd42"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "not declared"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "effect",
+      "version": "4.0.1",
+      "scope": "optional",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5ae74bb361014709389530b39b57d303a78ad089b5ddcb56166f2d28e291d372"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "not declared"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "ignore",
       "version": "7.0.13",
       "scope": "required",
@@ -49,6 +298,56 @@
         {
           "name": "declaredRange",
           "value": "^7.0.13"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "node-addon-api",
+      "version": "8.9.2",
+      "scope": "optional",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f28166ab3c63975eca92dfd66fc703d700464da90b49ff0d20f682189cb61063"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "not declared"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "node-gyp-build",
+      "version": "4.8.4",
+      "scope": "optional",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "846f026925e29a9aaae50649818d73846b52edb0e25221676c3a2c83d39039fb"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "not declared"
         }
       ]
     },
@@ -108,6 +407,35 @@
     },
     {
       "type": "library",
+      "name": "tree-sitter-javascript",
+      "version": "0.23.1",
+      "scope": "optional",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b5a35e2814ac8da01e35f4c763d5a8d1d12da06cd10bea77a082c839c780d96c"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "declaredRange",
+          "value": "not declared"
+        },
+        {
+          "name": "peer:tree-sitter",
+          "value": "^0.21.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "tree-sitter-typescript",
       "version": "0.23.2",
       "scope": "required",
@@ -138,7 +466,53 @@
   ],
   "dependencies": [
     {
+      "ref": "@ai-sdk/provider",
+      "dependsOn": []
+    },
+    {
+      "ref": "@opencode/ai",
+      "dependsOn": []
+    },
+    {
+      "ref": "@opencode/client",
+      "dependsOn": [
+        "effect"
+      ]
+    },
+    {
+      "ref": "@opencode/plugin",
+      "dependsOn": []
+    },
+    {
+      "ref": "@opencode/protocol",
+      "dependsOn": []
+    },
+    {
+      "ref": "@opencode/schema",
+      "dependsOn": []
+    },
+    {
+      "ref": "@opencode/util",
+      "dependsOn": []
+    },
+    {
+      "ref": "@standard-schema/spec",
+      "dependsOn": []
+    },
+    {
+      "ref": "effect",
+      "dependsOn": []
+    },
+    {
       "ref": "ignore",
+      "dependsOn": []
+    },
+    {
+      "ref": "node-addon-api",
+      "dependsOn": []
+    },
+    {
+      "ref": "node-gyp-build",
       "dependsOn": []
     },
     {
@@ -147,6 +521,12 @@
     },
     {
       "ref": "tree-sitter-go",
+      "dependsOn": [
+        "tree-sitter"
+      ]
+    },
+    {
+      "ref": "tree-sitter-javascript",
       "dependsOn": [
         "tree-sitter"
       ]

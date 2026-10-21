@@ -1,6 +1,6 @@
 {
   "note": "The dependency audit, computed from the INSTALLED tree rather than from the declarations. The declarations are what a package claims; the installed tree is what it has, and the tree-sitter peer conflict was invisible in the declarations.",
-  "date": "2026-10-21T20:52:39.792Z",
+  "date": "2026-10-21T22:22:02.086Z",
   "release": {
     "name": "@nexussean/opencode-project-intelligence",
     "version": "0.1.0"
@@ -8,13 +8,131 @@
   "source": "the release bundle's installed dependency tree",
   "packages": [
     {
+      "name": "@ai-sdk/provider",
+      "version": "3.0.8",
+      "licence": "Apache-2.0",
+      "direct": false,
+      "peerDependencies": {},
+      "optionalPeers": [],
+      "integrity": "sha256:61b8f2b9f31a6de6c1337ffe984a781d4eb3eedc9f34c1ff1d74cd7850f51d39"
+    },
+    {
+      "name": "@opencode/ai",
+      "version": "2.1.2",
+      "licence": "MIT",
+      "direct": false,
+      "peerDependencies": {},
+      "optionalPeers": [],
+      "integrity": "sha256:39edcc5e12efb3f8236873f7f998e7a89505ebec5bb818938474bc224b5e4627"
+    },
+    {
+      "name": "@opencode/client",
+      "version": "2.1.2",
+      "licence": "MIT",
+      "direct": false,
+      "peerDependencies": {
+        "effect": "4.0.1",
+        "solid-js": ">=1.9.0"
+      },
+      "optionalPeers": [
+        "effect",
+        "solid-js"
+      ],
+      "integrity": "sha256:9ad0de1519544f93dc0e92ce205c6983cd459e0746720fdc383530a090f02bfc"
+    },
+    {
+      "name": "@opencode/plugin",
+      "version": "2.1.2",
+      "declared": "^2.0.32",
+      "licence": "MIT",
+      "direct": true,
+      "peerDependencies": {
+        "@opencode/theme": "2.1.2",
+        "@opentui/core": ">=0.6.6",
+        "@opentui/solid": ">=0.6.6",
+        "solid-js": ">=1.9.0"
+      },
+      "optionalPeers": [
+        "@opencode/theme",
+        "@opentui/core",
+        "@opentui/solid",
+        "solid-js"
+      ],
+      "integrity": "sha256:424dcc0a1d2c6d3317cc81955cb6c200ff05a46451b14f1670aaa573b6a58c12"
+    },
+    {
+      "name": "@opencode/protocol",
+      "version": "2.1.2",
+      "licence": "MIT",
+      "direct": false,
+      "peerDependencies": {},
+      "optionalPeers": [],
+      "integrity": "sha256:c2c19d290348d07c3b54c5ae72efb9fec4a0eda283eaa6df328452c5dcc47ae9"
+    },
+    {
+      "name": "@opencode/schema",
+      "version": "2.0.32",
+      "declared": "2.0.32",
+      "licence": "MIT",
+      "direct": true,
+      "peerDependencies": {},
+      "optionalPeers": [],
+      "integrity": "sha256:005c9b9b8dacfe1e1b02133a3063d35eec57c26c0f7af5fd374a3a1f864590f5"
+    },
+    {
+      "name": "@opencode/util",
+      "version": "2.1.2",
+      "licence": "MIT",
+      "direct": false,
+      "peerDependencies": {},
+      "optionalPeers": [],
+      "integrity": "sha256:d19389f2dfce5e3c054565dbe1f58e444796e74cb9defecb938ec7643fe4db4e"
+    },
+    {
+      "name": "@standard-schema/spec",
+      "version": "1.1.0",
+      "licence": "MIT",
+      "direct": false,
+      "peerDependencies": {},
+      "optionalPeers": [],
+      "integrity": "sha256:278468d78e81b06e1b636ac89d01d7033783c6f5a40820bcf90bc01fa9efbd42"
+    },
+    {
+      "name": "effect",
+      "version": "4.0.1",
+      "licence": "MIT",
+      "direct": false,
+      "peerDependencies": {},
+      "optionalPeers": [],
+      "integrity": "sha256:5ae74bb361014709389530b39b57d303a78ad089b5ddcb56166f2d28e291d372"
+    },
+    {
       "name": "ignore",
       "version": "7.0.13",
       "declared": "^7.0.13",
       "licence": "MIT",
       "direct": true,
       "peerDependencies": {},
+      "optionalPeers": [],
       "integrity": "sha256:f2ece57bfbc26f5f3cfc7ca1c5e835d73e01b9e46318a91d7dbd6803a5d504df"
+    },
+    {
+      "name": "node-addon-api",
+      "version": "8.9.2",
+      "licence": "MIT",
+      "direct": false,
+      "peerDependencies": {},
+      "optionalPeers": [],
+      "integrity": "sha256:f28166ab3c63975eca92dfd66fc703d700464da90b49ff0d20f682189cb61063"
+    },
+    {
+      "name": "node-gyp-build",
+      "version": "4.8.4",
+      "licence": "MIT",
+      "direct": false,
+      "peerDependencies": {},
+      "optionalPeers": [],
+      "integrity": "sha256:846f026925e29a9aaae50649818d73846b52edb0e25221676c3a2c83d39039fb"
     },
     {
       "name": "tree-sitter",
@@ -23,6 +141,7 @@
       "licence": "MIT",
       "direct": true,
       "peerDependencies": {},
+      "optionalPeers": [],
       "integrity": "sha256:5fd12b248edb2d001e80ecc6258a4ba91292fda7fbac12e9312d72a271c691a3"
     },
     {
@@ -34,7 +153,23 @@
       "peerDependencies": {
         "tree-sitter": "^0.21.1"
       },
+      "optionalPeers": [
+        "tree-sitter"
+      ],
       "integrity": "sha256:e60e35a7617abf5437bd5c5c4ae622309d7b0172eb1df7a2e93c2f99659a1747"
+    },
+    {
+      "name": "tree-sitter-javascript",
+      "version": "0.23.1",
+      "licence": "MIT",
+      "direct": false,
+      "peerDependencies": {
+        "tree-sitter": "^0.21.1"
+      },
+      "optionalPeers": [
+        "tree-sitter"
+      ],
+      "integrity": "sha256:b5a35e2814ac8da01e35f4c763d5a8d1d12da06cd10bea77a082c839c780d96c"
     },
     {
       "name": "tree-sitter-typescript",
@@ -45,10 +180,13 @@
       "peerDependencies": {
         "tree-sitter": "^0.21.0"
       },
+      "optionalPeers": [
+        "tree-sitter"
+      ],
       "integrity": "sha256:5811f5b9d3cfa151de38afb769b3d8de3aa3dcee5407fb1bf24e47430b46adee"
     }
   ],
-  "packageCount": 4,
+  "packageCount": 16,
   "peerConflicts": [],
   "declaredRangeMismatches": [],
   "unknownLicences": [],
@@ -60,12 +198,12 @@
     {
       "step": "the installed tree is read",
       "ok": true,
-      "detail": "4 packages under ./release/bundle/packages/retrieval/node_modules"
+      "detail": "16 packages under ./release/bundle/node_modules"
     },
     {
       "step": "every peer requirement is met by the installed tree",
       "ok": true,
-      "detail": "4 packages checked, none violated"
+      "detail": "6 direct dependencies checked, none violated"
     },
     {
       "step": "every installed version satisfies its declared range",
@@ -75,7 +213,7 @@
     {
       "step": "every package's licence is known",
       "ok": true,
-      "detail": "MIT"
+      "detail": "Apache-2.0, MIT"
     }
   ]
 }

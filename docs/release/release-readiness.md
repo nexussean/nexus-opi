@@ -4,12 +4,12 @@
 **Licence:** GNU Affero General Public License, v3 or later.
 **Repository:** <https://github.com/nexussean/nexus-opi> — **public**.
 **Published to npm:** **no.** The package is `private: true` and unpublished.
-**Artifact SHA-256:** `42f242fb283d1dd53b694c49d0e2b91c93eb85deeb37e8b969f9365c8fb5be04`.
-**Tarball:** `nexussean-opencode-project-intelligence-0.1.0.tgz`, 88 files.
+**Artifact SHA-256:** `3bcc37c4a7651ea40992283991d5be4d8fd5cf7ae34e74ef4f73bdac781a2a73`.
+**Tarball:** `nexussean-opencode-project-intelligence-0.1.0.tgz`, 89 files.
 
 **Verdict: every gate that can run on one platform is met, and the owner
-decisions are made. The hosted three-platform CI is the remaining technical
-gate, and it is dispatched.**
+decisions are made. The hosted three-platform CI is dispatched and is
+running; its result is in §3.
 
 The previous report is preserved at
 [`release-readiness-before-artifact-audit.md`](release-readiness-before-artifact-audit.md).
@@ -31,7 +31,7 @@ Nothing in it was rewritten; this report adds evidence for this candidate.
 | **Recovery rehearsal** | **PASS** | 13/13 against a **copy of the real registry**. 36 project identities, 17 tasks and 19 task events preserved byte for byte; a controlled migration failure rolled back; the restore is exact; the source is unchanged. |
 | **Live final artifact** | **PASS** | 12/12. The **packaged tarball** in a real OpenCode session, with a temporary configuration, temporary project and temporary data. `fixtures/acceptance/release/live-artifact.json`. |
 | **CI rehearsal** | **PASS** | 9/9 local rehearsal of the workflow's steps, in the workflow's order. `release/evidence/ci-rehearsal.json`. |
-| **Cross-platform CI (macOS, Linux, Windows)** | **IN FLIGHT** | The repository is public, the branch is pushed and the workflow is dispatched. See §3. |
+| **Cross-platform CI (macOS, Linux, Windows)** | **RUNNING** | The repository is public, the branch is pushed, and the workflow has run on all three platforms. macOS and Linux pass; Windows found real defects, all now fixed. See §3 and [`cross-platform-findings.md`](cross-platform-findings.md). |
 | **T-13 live validation** | **NOT RUN** | The experimental Code Mode audit is disabled, as the plan requires. See §4. |
 | **Registry identity** | **DECIDED** | `@nexussean/opencode-project-intelligence`. The scope is unclaimed on npm and is the owner's to claim. |
 | **Licensing** | **DECIDED** | AGPL-3.0. `LICENSE` and `LICENSE-NOTICE.md` travel in the tarball, and the artifact check **fails** if the licence is missing. |
@@ -62,7 +62,7 @@ Every command, and what it returned.
 
 One local session, on `darwin/arm64`, OpenCode `v2.1.2`, model
 `ollama-cloud/deepseek-v4.1-flash`, artifact
-`42f242fb283d1dd53b694c49d0e2b91c93eb85deeb37e8b969f9365c8fb5be04`.
+`3bcc37c4a7651ea40992283991d5be4d8fd5cf7ae34e74ef4f73bdac781a2a73`.
 
 | Check | Outcome |
 |---|---|
@@ -118,6 +118,51 @@ steps of the workflow, in the workflow's order, on this platform**, and all
 nine passed. That is evidence that the steps work **here**. It is not
 evidence that hosted CI passed, and it is not evidence that Linux or Windows
 pass.
+
+### What the hosted runners found
+
+The first run failed on all three platforms. The findings are of three
+kinds, and the difference matters: a **code defect** is a bug in the
+product, a **test of the machine** is a test that was really a test of the
+platform it ran on, and a **gitignored dependency** is a test that only ran
+on the machine that produced the data.
+
+The **code defects** were:
+
+- The **trust boundary was not a trust boundary**. It stopped the upward
+  walk for a repository, but a directory outside it still resolved by the
+  path fallback — and the coverage register and the threat model both say
+  it must not. The test that should have caught it was passing on macOS
+  only because `/var` is a symlink to `/private/var`.
+- The **PATH search split on a hard-coded colon**, so on Windows **no**
+  executable could be found at all, and a bare name did not resolve
+  through `PATHEXT`.
+- The **process tree was not killed on Windows**: the negative-pid group
+  kill is POSIX, so a grandchild survived a timeout — which is what
+  **T-08** forbids.
+- The **bundle could not import its own dependency** on Windows, because
+  the resolver does not follow a junction into a directory whose entries
+  are themselves symlinks. The bundle now carries a flat, **copied**
+  `node_modules` — what npm would install anyway.
+- An **open handle failed the run at the last step**: the pilot passed all
+  thirteen checks and then could not delete its sandbox, because a
+  reopened store was never closed.
+
+The **tests that were tests of the machine** were the billing test (the
+session store's presence decides which reason fires), the uninstall test
+(it forbade a substring the plugin's own name contains on Linux), the
+verification tests (`/bin/echo`, `/bin/sh`, `sleep`), the benchmark's fake
+CLI (a shebang script is not an executable on Windows) and the clone
+fixture (a POSIX-only regular expression for a path's parent).
+
+The **gitignored dependency** was the grader's regression test, which read
+`fixtures/bench/results` — so it ran only on the machine that produced the
+reports, and in a fresh clone it took the whole test file down. The
+regression corpus is now extracted and **versioned**, and the suite passes
+with the gitignored data absent.
+
+The full account, with the runs and the reasoning, is in
+[`cross-platform-findings.md`](cross-platform-findings.md).
 
 ---
 
@@ -194,8 +239,8 @@ the check **fails** if the tree has moved since the artifacts were built.
 | Version | 0.1.0 |
 | Licence | `AGPL-3.0` |
 | Build source digest | `6b6495c20578265e…` over **195** files, matching the tree |
-| Artifact SHA-256 | `42f242fb283d1dd53b694c49d0e2b91c93eb85deeb37e8b969f9365c8fb5be04` |
-| Files in the artifact | 88 (87 in the bundle, plus `MANIFEST.json`) |
+| Artifact SHA-256 | `3bcc37c4a7651ea40992283991d5be4d8fd5cf7ae34e74ef4f73bdac781a2a73` |
+| Files in the artifact | 89 (88 in the bundle, plus `MANIFEST.json`) |
 | Published | **false** |
 | Private | **true** |
 
@@ -336,7 +381,7 @@ and every one of them in the tree is MIT.
 
 | # | Blocker | What closes it |
 |---|---|---|
-| **T-1** | **The cross-platform CI has not reported.** The workflow is dispatched; the hosted runs are the only evidence that Linux and Windows pass. | The hosted matrix. It is running. |
+| **T-1** | **The cross-platform CI is running.** macOS and Linux pass. Windows found real defects — a trust boundary that was not one, a PATH split on a hard-coded colon, a process tree that was not killed, and a bundle that could not import its own dependency — all now fixed. | The final run on this candidate's revision. |
 | **T-2** | **The live T-13 audit has not been validated.** | A live Code Mode session with `OPI_AUDIT_LOG` set. Only required if complete T-13 auditing is in P8's scope. |
 | **T-3** | **The recovery rehearsal could not exercise a non-empty memory or verification table.** The owner's registry has none. | A database with populated memory and verification tables. |
 | **T-4** | **Only macOS has been exercised live.** | The hosted matrix, for the build and the gates. A live session on each platform remains a separate claim. |

@@ -25,7 +25,8 @@
  */
 import { cp, mkdir, readFile, readdir, rm, writeFile, stat } from "node:fs/promises"
 import { existsSync } from "node:fs"
-import { join, resolve, relative, dirname } from "node:path"
+import { realpath } from "node:fs/promises"
+import { join, resolve, relative, dirname, basename } from "node:path"
 import { pathToFileURL } from "node:url"
 import { createHash } from "node:crypto"
 
@@ -203,24 +204,80 @@ try {
   // --- 5. The bundle loads --------------------------------------------------
   //
   // The bundle is loaded from inside the repository, so the runtime
-  // dependencies have to be resolvable from it. Each workspace package
-  // has its own `node_modules`, and the root does not hoist them, so the
-  // bundle carries a link to each package's own.
+  // dependencies have to be resolvable from it. Each workspace package has
+  // its own `node_modules`, and the root does not hoist them, so the
+  // bundle needs its own.
   //
-  // A published package would have its dependencies installed by npm, in
-  // one flat tree. This is the closest equivalent that lets the load check
-  // run here.
-  const { symlink } = await import("node:fs/promises")
-  let linked = 0
-  for (const name of PACKAGES) {
-    const source = resolve(REPO, "packages", name, "node_modules")
-    if (!existsSync(source)) continue
-    const target = join(OUT, "packages", name, "node_modules")
-    if (existsSync(target)) continue
-    await symlink(source, target, process.platform === "win32" ? "junction" : "dir")
-    linked++
+  // It gets a **flat, copied** tree — which is what npm would install
+  // anyway. A junction was used before, and it worked on macOS and failed
+  // on Windows: the resolver does not follow a junction into a directory
+  // whose entries are themselves symlinks, so the bundle could not import
+  // its own dependency and the build failed on the hosted runner.
+  // Copying takes every reparse point out of the picture.
+  //
+  // The **workspace** packages are not copied: the build rewrites the
+  // workspace imports to relative paths, and the bundle already carries
+  // its own copies of them.
+  const bundleModules = join(OUT, "node_modules")
+  await mkdir(bundleModules, { recursive: true })
+  let copied = 0
+  for (const name of Object.keys(dependencies)) {
+    let source: string | undefined
+    for (const pkg of PACKAGES) {
+      const candidate = join(REPO, "packages", pkg, "node_modules", name)
+      if (existsSync(join(candidate, "package.json"))) {
+        source = candidate
+        break
+      }
+    }
+    if (!source) {
+      throw new Error(`The bundle's dependency ${name} is not installed in the workspace`)
+    }
+    // The package and **its own dependencies** live together in the
+    // installer's store, as siblings under one `node_modules`. Copying
+    // only the package would leave its dependencies behind — `effect` and
+    // `@standard-schema/spec` for the schema, for instance — and the
+    // bundle would not import.
+    const real = await realpath(source)
+    // The store keeps a package and its own dependencies as siblings under
+    // one `node_modules`. It is the **closest** ancestor named
+    // `node_modules`: for a scoped package that is above the scope
+    // directory, and for an unscoped one it is directly above the package.
+    let siblings = dirname(real)
+    while (basename(siblings) !== "node_modules") {
+      const parent = dirname(siblings)
+      if (parent === siblings) throw new Error(`The store layout for ${name} was not understood`)
+      siblings = parent
+    }
+    for (const entry of await readdir(siblings)) {
+      const from = join(siblings, entry)
+      const to = join(bundleModules, entry)
+      // The first copy wins, for now. A closure that disagrees about a
+      // version is resolved by the installer for the published artifact
+      // anyway; here it only has to be enough to import.
+      if (existsSync(to)) continue
+      await mkdir(dirname(to), { recursive: true })
+      await cp(from, to, { recursive: true, dereference: true, force: true })
+    }
+    copied++
   }
-  step("the bundle's dependencies resolve", linked > 0, `${linked} package dependency trees linked`)
+  // The **direct** dependency's own version wins over a version the
+  // closure brought along. The manifest pins it, so the bundle has to
+  // carry it: a closure that happened to be copied first would otherwise
+  // shadow it, and the bundle would not be the dependency set the
+  // manifest declares.
+  for (const name of Object.keys(dependencies)) {
+    for (const pkg of PACKAGES) {
+      const candidate = join(REPO, "packages", pkg, "node_modules", name)
+      if (!existsSync(join(candidate, "package.json"))) continue
+      const target = join(bundleModules, name)
+      await rm(target, { recursive: true, force: true })
+      await mkdir(dirname(target), { recursive: true })
+      await cp(candidate, target, { recursive: true, dereference: true, force: true })
+      break
+    }
+  }
+  step("the bundle's dependencies resolve", copied > 0, `${copied} dependencies copied`)
 
   //
   // The check that matters: the bundle's entry point imports, and exports

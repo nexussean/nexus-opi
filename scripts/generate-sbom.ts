@@ -148,9 +148,10 @@ const bundleManifest = JSON.parse(await readFile(join(BUNDLE, "package.json"), "
   version: string
 }
 
-// The installed tree. The bundle links each package's `node_modules`, so
-// the runtime dependencies are found there.
-const roots = [join(BUNDLE, "packages", "retrieval", "node_modules")]
+// The installed tree. The bundle carries a **flat** `node_modules` with the
+// runtime dependencies and their own closure, so everything the release
+// would install is found there.
+const roots = [join(BUNDLE, "node_modules")]
 
 /** The direct dependencies, and their installed versions. */
 const components: {
@@ -160,6 +161,7 @@ const components: {
   licence: string
   direct: boolean
   peerDependencies: Record<string, string>
+  optionalPeers: string[]
   integrity: string
 }[] = []
 
@@ -202,6 +204,12 @@ for (const root of roots) {
       licence,
       direct: Boolean(bundleManifest.dependencies?.[name]),
       peerDependencies: manifest.peerDependencies ?? {},
+      // An **optional** peer that is not installed is not a conflict. The
+      // plugin declares the TUI's peers — theme, opentui, solid — and it
+      // does not use them, so they are optional by design.
+      optionalPeers: Object.entries(manifest.peerDependenciesMeta ?? {})
+        .filter(([, meta]) => (meta as { optional?: boolean })?.optional === true)
+        .map(([peer]) => peer),
       integrity: `sha256:${digest.digest("hex")}`,
     })
   }
@@ -215,14 +223,25 @@ step(
 
 // --- The peer check ---------------------------------------------------------
 //
-// Every installed package's peer requirement must be met by the installed
-// tree. A violation is a conflict, and it is reported as one.
+// Every **direct** dependency's peer requirement must be met by the
+// installed tree. A violation is a conflict, and it is reported as one.
+//
+// The check is scoped to the release's own dependency graph. The closure's
+// packages are here for the licence inventory and the SBOM, but their peer
+// requirements are not checked against a **flat** tree: a flat tree is not
+// what the installer produces, so a conflict reported against it could be
+// an artefact of the flattening rather than a real one. The closure's own
+// peers are settled by the installer, and the isolated install checks that
+// with npm's own resolution and normal peer validation.
 const installedVersions = new Map(components.map(entry => [entry.name, entry.version]))
 const conflicts: { package: string; peer: string; required: string; installed?: string }[] = []
 for (const component of components) {
+  if (!component.direct) continue
   for (const [peer, range] of Object.entries(component.peerDependencies)) {
     const installed = installedVersions.get(peer)
     if (!installed) {
+      // An optional peer that is absent is not a conflict.
+      if (component.optionalPeers.includes(peer)) continue
       conflicts.push({ package: component.name, peer, required: range, installed: undefined })
       continue
     }
@@ -236,7 +255,7 @@ step(
   conflicts.length === 0,
   conflicts.length
     ? conflicts.map(c => `${c.package} needs ${c.peer}@${c.required}, got ${c.installed ?? "nothing"}`).join("; ")
-    : `${components.length} packages checked, none violated`,
+    : `${components.filter(entry => entry.direct).length} direct dependencies checked, none violated`,
 )
 
 // --- The declared-range check -----------------------------------------------
