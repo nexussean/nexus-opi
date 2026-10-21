@@ -19,6 +19,19 @@ afterEach(async () => {
   await box.cleanup()
 })
 
+/**
+ * Every test in this file runs several **git** subprocesses, and git is
+ * slower on a loaded machine than the default five-second per-test
+ * timeout allows. A timeout there is not a failure of the thing under
+ * test — it is the machine being busy — and it happened on a loaded
+ * workstation, where the whole suite took ten minutes and one test
+ * failed on the clock alone.
+ *
+ * The timeout is stated rather than inherited, so the file says what it
+ * needs.
+ */
+const GIT_TIMEOUT_MS = 30_000
+
 describe("resolveProjectPath", () => {
   test("a plain git repository resolves to itself", async () => {
     const repo = await makeRepo(join(box.root, "repo"))
@@ -29,7 +42,7 @@ describe("resolveProjectPath", () => {
     expect(resolved?.worktree.kind).toBe("root")
     expect(resolved?.worktree.branch).toBe("main")
     expect(resolved?.worktree.head).toMatch(/^[0-9a-f]{40,}$/)
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("a directory with no git resolves by path", async () => {
     const plain = await makePlain(join(box.root, "plain"))
@@ -38,7 +51,7 @@ describe("resolveProjectPath", () => {
     expect(resolved?.strategy).toBe("path")
     expect(resolved?.canonicalRoot).toBe(await canonical(plain))
     expect(resolved?.key).toBe(`path:${await canonical(plain)}`)
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("a linked worktree shares the project but not the worktree", async () => {
     const repo = await makeRepo(join(box.root, "repo"))
@@ -56,7 +69,7 @@ describe("resolveProjectPath", () => {
     expect(linked?.worktree.key).not.toBe(main?.worktree.key)
     expect(linked?.worktree.kind).toBe("linked")
     expect(linked?.worktree.branch).toBe("feature")
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("two clones of one origin are different projects", async () => {
     const origin = await makeRepo(join(box.root, "origin"))
@@ -70,7 +83,7 @@ describe("resolveProjectPath", () => {
     expect(a?.key).not.toBe(b?.key)
     expect(a?.canonicalRoot).toBe(await canonical(cloneA))
     expect(b?.canonicalRoot).toBe(await canonical(cloneB))
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("a nested repository is its own project with a parent", async () => {
     const outer = await makeRepo(join(box.root, "outer"))
@@ -81,7 +94,7 @@ describe("resolveProjectPath", () => {
     expect(resolved?.canonicalRoot).toBe(await canonical(inner))
     expect(resolved?.parent?.canonicalRoot).toBe(await canonical(outer))
     expect(resolved?.key).not.toBe(`git:${join(outer, ".git")}`)
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("a submodule is its own project with a parent", async () => {
     const source = await makeRepo(join(box.root, "source"))
@@ -97,7 +110,7 @@ describe("resolveProjectPath", () => {
     expect(resolved?.strategy).toBe("git")
     expect(resolved?.canonicalRoot).not.toBe(await canonical(host))
     expect(resolved?.parent?.canonicalRoot).toBe(await canonical(host))
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("a symlinked path resolves to the same project", async () => {
     const repo = await makeRepo(join(box.root, "repo"))
@@ -109,7 +122,7 @@ describe("resolveProjectPath", () => {
 
     expect(viaLink?.key).toBe(viaReal?.key)
     expect(viaLink?.canonicalRoot).toBe(await canonical(repo))
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("a boundary stops the walk", async () => {
     const repo = await makeRepo(join(box.root, "repo"))
@@ -122,12 +135,12 @@ describe("resolveProjectPath", () => {
     const bounded = await resolveProjectPath(inside, { boundary: inside })
     expect(bounded?.strategy).toBe("path")
     expect(bounded?.canonicalRoot).toBe(await canonical(inside))
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("a missing directory resolves to nothing", async () => {
     const resolved = await resolveProjectPath(join(box.root, "does-not-exist"))
     expect(resolved).toBeUndefined()
-  })
+  }, GIT_TIMEOUT_MS)
 })
 
 describe("resolveProject", () => {
@@ -138,7 +151,7 @@ describe("resolveProject", () => {
 
     expect(first?.id).toBe(second?.id)
     expect(first?.worktree.id).toBe(second?.worktree.id)
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("a worktree gets its own id but the project's", async () => {
     const repo = await makeRepo(join(box.root, "repo"))
@@ -150,7 +163,7 @@ describe("resolveProject", () => {
     expect(linked?.id).toBe(main?.id)
     expect(linked?.worktree.id).not.toBe(main?.worktree.id)
     expect(linked?.worktree.projectId).toBe(main?.id)
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("separate clones get separate ids", async () => {
     const origin = await makeRepo(join(box.root, "origin"))
@@ -158,7 +171,7 @@ describe("resolveProject", () => {
     const b = await resolveProject(await makeClone(origin, join(box.root, "clone-b")), registry)
 
     expect(a?.id).not.toBe(b?.id)
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("a moved project gets a new id until it is relinked", async () => {
     const plain = await makePlain(join(box.root, "plain"))
@@ -179,7 +192,7 @@ describe("resolveProject", () => {
     // The moved path now resolves to the relinked id.
     const resolved = await resolveProject(moved, registry)
     expect(resolved?.id).toBe(before?.id)
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("a project and its worktree never share an id", async () => {
     const plain = await makePlain(join(box.root, "plain"))
@@ -189,7 +202,7 @@ describe("resolveProject", () => {
     const repo = await makeRepo(join(box.root, "repo"))
     const gitIdentity = await resolveProject(repo, registry)
     expect(gitIdentity?.worktree.id).not.toBe(gitIdentity?.id)
-  })
+  }, GIT_TIMEOUT_MS)
 
   test("the registry lists what it has seen", async () => {
     const repo = await makeRepo(join(box.root, "repo"))
@@ -198,5 +211,5 @@ describe("resolveProject", () => {
 
     const all = await registry.list()
     expect(all.length).toBe(2)
-  })
+  }, GIT_TIMEOUT_MS)
 })
