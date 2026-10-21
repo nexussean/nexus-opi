@@ -31,6 +31,24 @@ maps the new guide onto this existing code.
 The planning package that this work follows lives outside this repository, in
 `opencode-project-intelligence-plan/`.
 
+## Identity and licence
+
+- The package is **`@nexussean/opencode-project-intelligence`**.
+- The licence is the **GNU Affero General Public License, v3 or later**. The
+  full text is [`LICENSE`](LICENSE); the notices are in
+  [`LICENSE-NOTICE.md`](LICENSE-NOTICE.md).
+- The repository is <https://github.com/nexussean/nexus-opi>.
+- The AGPL was chosen because this program has a **network interface**: the
+  dashboard serves over HTTP, and section 13 requires that a modified
+  instance offer its Corresponding Source to the people using it over a
+  network. The dashboard's footer carries the legal notices and a **Source**
+  link, which is how that obligation is met.
+- The **runtime** identifier — the plugin id, the skill id, and the
+  directory under `XDG_DATA_HOME` that holds the registry — is still
+  `opencode-project-intelligence`, deliberately. It is where an existing
+  installation's data lives, and changing it would orphan every existing
+  registry, project and task.
+
 ## Running the compatibility probe
 
 ```bash

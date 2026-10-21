@@ -106,6 +106,17 @@
       }
       .close { position: absolute; top: 12px; right: 14px; }
       .muted { color: var(--muted); }
+      /* The AGPL's "Appropriate Legal Notices" (section 5(d)) and its
+         requirement to offer the Corresponding Source to remote users
+         (section 13) are met by this footer. It is not decoration. */
+      footer.legal {
+        flex: none; border-top: 1px solid var(--border); background: var(--surface);
+        padding: 8px 18px; color: var(--faint); font-size: 11px; line-height: 1.6;
+      }
+      footer.legal a { color: var(--muted); }
+      footer.legal .sep { opacity: .5; margin: 0 6px; }
+      footer.legal .source { color: var(--accent); text-decoration: none; font-weight: 600; }
+      footer.legal .source:hover { text-decoration: underline; }
     </style>
   </head>
   <body>
@@ -133,6 +144,32 @@
       <button class="ghost close" id="close-drawer">Close</button>
       <div id="drawer-body"></div>
     </aside>
+
+    <!-- The AGPL's "Appropriate Legal Notices" (section 5(d)) require a
+         copyright notice, a statement that there is no warranty, a
+         statement that the work may be conveyed under the Licence, and a
+         way to view a copy of the Licence. Section 13 additionally
+         requires that users interacting with a modified instance over a
+         network are offered the Corresponding Source, so the Source link
+         is prominent rather than buried. -->
+    <footer class="legal">
+      <div>
+        Copyright (C) 2026 the OPI contributors. This program is free
+        software: you can redistribute it and/or modify it under the terms
+        of the GNU Affero General Public License as published by the Free
+        Software Foundation, either version 3 of the License, or (at your
+        option) any later version.
+      </div>
+      <div>
+        This program is distributed in the hope that it will be useful, but
+        WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+        <span class="sep">|</span>
+        <a class="source" href="https://github.com/nexussean/nexus-opi" target="_blank" rel="noreferrer noopener">Source</a>
+        <span class="sep">|</span>
+        <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noreferrer noopener">Licence (AGPL-3.0)</a>
+      </div>
+    </footer>
 
     <script>
       const token = new URLSearchParams(location.search).get("t") ?? ""

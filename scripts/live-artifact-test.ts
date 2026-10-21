@@ -38,7 +38,7 @@
  * here, and its live validation is a separate gate.
  */
 import { mkdtemp, rm, mkdir, writeFile, readFile, readdir } from "node:fs/promises"
-import { existsSync, readdirSync, realpathSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { spawn } from "node:child_process"
@@ -211,7 +211,13 @@ try {
     "utf8",
   )
   const npm = process.platform === "win32" ? "npm.cmd" : "npm"
-  const tarball = join(REPO, "release/evidence/opencode-project-intelligence-0.1.0.tgz")
+  // The tarball's name follows the package's name, and the package's name
+  // carries a scope. It is read from the artifact check rather than
+  // written here, so a rename cannot leave a stale path behind.
+  const artifactCheck = JSON.parse(
+    readFileSync(join(REPO, "release/evidence/artifact-check.json"), "utf8"),
+  ) as { tarball: string; sha256: string; name?: string }
+  const tarball = join(REPO, "release/evidence", artifactCheck.tarball)
   const install = await run(npm, ["install", tarball, "--no-audit", "--no-fund"], { cwd: installDir })
   step(
     "the packaged artifact installs",
@@ -221,7 +227,14 @@ try {
   if (install.code !== 0) throw new Error("the artifact did not install")
 
   // The plugin is loaded from the **installed** package.
-  const pluginDir = join(installDir, "node_modules", "opencode-project-intelligence")
+  //
+  // The package carries a scope, so the installed directory is
+  // `node_modules/@scope/name`, and the path is derived from the
+  // installed manifest rather than written here.
+  const installedManifest = JSON.parse(
+    readFileSync(join(installDir, "node_modules", ...artifactCheck.name.split("/"), "package.json"), "utf8"),
+  ) as { name: string }
+  const pluginDir = join(installDir, "node_modules", ...installedManifest.name.split("/"))
   await writeFile(
     join(configHome, "opencode", "opencode.json"),
     `${JSON.stringify(
@@ -480,7 +493,7 @@ try {
         date: new Date().toISOString(),
         platform: { os: process.platform, arch: process.arch },
         opencode: { binary, version },
-        artifact: { tarball: "opencode-project-intelligence-0.1.0.tgz", sha256: artifact.sha256 },
+        artifact: { tarball: artifactCheck.tarball, sha256: artifact.sha256 },
         model: "ollama-cloud/deepseek-v4.1-flash",
         registeredTools: registered,
         indexRoot: indexedRoot,

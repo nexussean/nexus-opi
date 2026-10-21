@@ -1,6 +1,6 @@
 {
   "note": "The isolated packaged install: the release bundle packed into a tarball, installed into an empty directory with peer validation left on, and TypeScript, JavaScript and Go parsed from the installed tree. Nothing was published.",
-  "date": "2026-10-21T18:58:06.100Z",
+  "date": "2026-10-21T20:52:36.342Z",
   "versions": {
     "tree-sitter": "0.21.1",
     "tree-sitter-typescript": "0.23.2",
@@ -12,7 +12,7 @@
     {
       "step": "the bundle packs into a tarball",
       "ok": true,
-      "detail": "opencode-project-intelligence-0.1.0.tgz"
+      "detail": "nexussean-opencode-project-intelligence-0.1.0.tgz"
     },
     {
       "step": "the tarball installs into an empty directory",

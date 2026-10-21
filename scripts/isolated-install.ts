@@ -31,7 +31,7 @@
  * directory that is deleted afterwards.
  */
 import { mkdtemp, rm, mkdir, writeFile, readFile, readdir } from "node:fs/promises"
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { spawn } from "node:child_process"
@@ -39,6 +39,21 @@ import { spawn } from "node:child_process"
 const REPO = resolve(import.meta.dir, "..")
 const BUNDLE = resolve(REPO, "release/bundle")
 const EVIDENCE = resolve(REPO, "fixtures/acceptance/release")
+
+/**
+ * The package's name, read from the bundle's own manifest.
+ *
+ * It is read rather than written so that a rename cannot leave a stale
+ * specifier behind. The name carries a scope, so the installed package
+ * lives at `node_modules/@scope/name`, and the import specifier has to
+ * match it exactly.
+ */
+const PACKAGE_NAME = (() => {
+  const manifest = JSON.parse(readFileSync(join(BUNDLE, "package.json"), "utf8")) as {
+    name: string
+  }
+  return manifest.name
+})()
 
 /** The report. */
 const steps: { step: string; ok: boolean; detail: string }[] = []
@@ -227,7 +242,7 @@ try {
   const loadScript = join(installDir, "load-check.mjs")
   await writeFile(
     loadScript,
-    `import plugin, { PLUGIN_ID, PLUGIN_VERSION } from "opencode-project-intelligence"
+    `import plugin, { PLUGIN_ID, PLUGIN_VERSION } from "${PACKAGE_NAME}"
 console.log(JSON.stringify({ id: PLUGIN_ID, version: PLUGIN_VERSION, hasDefault: typeof plugin === "object" && plugin !== null }))
 `,
     "utf8",

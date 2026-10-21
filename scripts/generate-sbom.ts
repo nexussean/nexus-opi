@@ -275,7 +275,7 @@ const audit = {
   note:
     "The dependency audit, computed from the INSTALLED tree rather than from the declarations. The declarations are what a package claims; the installed tree is what it has, and the tree-sitter peer conflict was invisible in the declarations.",
   date: new Date().toISOString(),
-  release: { name: bundleManifest.name ?? "opencode-project-intelligence", version: bundleManifest.version },
+  release: { name: bundleManifest.name ?? "unknown", version: bundleManifest.version },
   source: "the release bundle's installed dependency tree",
   packages: components.sort((a, b) => a.name.localeCompare(b.name)),
   packageCount: components.length,
@@ -302,9 +302,9 @@ const sbom = {
     tools: { components: [{ type: "application", name: "scripts/generate-sbom.ts" }] },
     component: {
       type: "application",
-      name: bundleManifest.name ?? "opencode-project-intelligence",
+      name: bundleManifest.name ?? "unknown",
       version: bundleManifest.version,
-      licenses: [{ license: { id: "UNLICENSED" } }],
+      licenses: [{ license: { id: bundleManifest.license ?? "unknown" } }],
     },
   },
   components: components

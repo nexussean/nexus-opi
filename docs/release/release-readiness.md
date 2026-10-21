@@ -1,16 +1,15 @@
 # Release readiness — the technical gates
 
-**Date:** 2026-10-21. **Candidate:** `opencode-project-intelligence` 0.1.0.
-**Source revision:** the candidate was assembled and verified at `76639d9` on
-`main`, pushed to the private `nexussean/nexus-opi`. Later commits are
-documentation only and do not change the source tree's digest
-`fcac726c6b340156…`, so every result below still belongs to this candidate.
-**Artifact SHA-256:** `42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87`.
-**Published:** **no.** The candidate is `private: true` and `UNLICENSED`.
+**Date:** 2026-10-21. **Candidate:** `@nexussean/opencode-project-intelligence` 0.1.0.
+**Licence:** GNU Affero General Public License, v3 or later.
+**Repository:** <https://github.com/nexussean/nexus-opi> — **public**.
+**Published to npm:** **no.** The package is `private: true` and unpublished.
+**Artifact SHA-256:** `42f242fb283d1dd53b694c49d0e2b91c93eb85deeb37e8b969f9365c8fb5be04`.
+**Tarball:** `nexussean-opencode-project-intelligence-0.1.0.tgz`, 88 files.
 
-**Verdict: the technical gates are met on this platform. The hosted
-three-platform CI was dispatched and every job was refused by the account's
-Actions billing, and the owner decisions are outstanding.**
+**Verdict: every gate that can run on one platform is met, and the owner
+decisions are made. The hosted three-platform CI is the remaining technical
+gate, and it is dispatched.**
 
 The previous report is preserved at
 [`release-readiness-before-artifact-audit.md`](release-readiness-before-artifact-audit.md).
@@ -26,15 +25,19 @@ Nothing in it was rewritten; this report adds evidence for this candidate.
 | **Acceptance pilot** | **PASS** | 13/13. The plan's own MVP shipping checklist, in a temporary data directory. `bun run release:pilot`. |
 | **Package installation** | **PASS** | The tarball installs into an empty directory with **npm and normal peer validation**. Every installed package's `tree-sitter` peer requirement is met by the installed tree. 9/9. `bun run release:isolated`. |
 | **Installed parsers** | **PASS** | TypeScript (`root=program`), JavaScript (`root=program`) and Go (`root=source_file`) each parse **from the installed package**. |
-| **Dependency audit and SBOM** | **PASS** | 6/6. Computed from the **installed** tree. Every peer requirement met, no declared-range violation, every licence known (MIT). `release/dependency-audit.json`, `release/sbom.json` (CycloneDX 1.5). |
+| **Dependency audit and SBOM** | **PASS** | 6/6. Computed from the **installed** tree. Every peer requirement met, no declared-range violation, every licence known (MIT). `release/dependency-audit.json`, `release/sbom.json` (CycloneDX 1.5, licence `AGPL-3.0`). |
 | **Release artifact check** | **PASS** | `artifact-checks-passed`, `isolatedImport: true`, `sbomComplete: true`, `diagnosticPeerTree: false`, `npm audit` exit 0 with **zero vulnerabilities** at every severity, `published: false`. |
+| **Reproducible packaging** | **PASS** | The bundle is packed **twice, into different directories**, and the two tarballs are compared byte for byte. They are identical, so the artifact's hash is a function of the source and not of when the build ran. |
 | **Recovery rehearsal** | **PASS** | 13/13 against a **copy of the real registry**. 36 project identities, 17 tasks and 19 task events preserved byte for byte; a controlled migration failure rolled back; the restore is exact; the source is unchanged. |
 | **Live final artifact** | **PASS** | 12/12. The **packaged tarball** in a real OpenCode session, with a temporary configuration, temporary project and temporary data. `fixtures/acceptance/release/live-artifact.json`. |
 | **CI rehearsal** | **PASS** | 9/9 local rehearsal of the workflow's steps, in the workflow's order. `release/evidence/ci-rehearsal.json`. |
-| **Cross-platform CI (macOS, Linux, Windows)** | **BLOCKED — account billing** | The repository was created (private), the branch pushed and the workflow dispatched. All six jobs were refused by GitHub: *"recent account payments have failed or your spending limit needs to be increased."* See §3. |
+| **Cross-platform CI (macOS, Linux, Windows)** | **IN FLIGHT** | The repository is public, the branch is pushed and the workflow is dispatched. See §3. |
 | **T-13 live validation** | **NOT RUN** | The experimental Code Mode audit is disabled, as the plan requires. See §4. |
-| **Registry identity** | **BLOCKED — owner** | The package name and scope are undecided. |
-| **Licensing** | **BLOCKED — owner** | The candidate is `UNLICENSED`. No licence was selected. |
+| **Registry identity** | **DECIDED** | `@nexussean/opencode-project-intelligence`. The scope is unclaimed on npm and is the owner's to claim. |
+| **Licensing** | **DECIDED** | AGPL-3.0. `LICENSE` and `LICENSE-NOTICE.md` travel in the tarball, and the artifact check **fails** if the licence is missing. |
+| **Repository visibility** | **DECIDED** | Public. The source is AGPL-licensed, which is the licence that makes public distribution coherent. |
+| **The kanban plugin** | **DECIDED** | Absorb the data model, keep the package. See [`kanban-plugin-decision.md`](kanban-plugin-decision.md). |
+| **The retrieval token criterion** | **DECIDED** | The plan's own 15% target stands. The shipping path clears it by 4×. |
 
 ---
 
@@ -44,22 +47,22 @@ Every command, and what it returned.
 
 | Command | Result |
 |---|---|
-| `bun run check` | **exit 0** — 701 pass, 0 fail, 4 123 assertions, 58 files, 22.4 s. Every package typechecks. |
+| `bun run check` | **exit 0** — 701 pass, 0 fail, 4 123 assertions, 58 files, 21.4 s. Every package typechecks. |
 | `bun run release:pilot` | **exit 0** — 13/13 steps. |
 | `bun run release:build` | **exit 0** — 11/11 steps. The manifest's version and dependencies are **derived from the workspace**. |
 | `bun run release:isolated` | **exit 0** — 9/9 steps. npm, peer validation on. |
 | `bun run release:sbom` | **exit 0** — 6/6 steps. |
-| `bun run scripts/verify-release.ts` | **exit 0** — `artifact-checks-passed`, `published: false`. |
+| `bun run scripts/verify-release.ts` | **exit 0** — `artifact-checks-passed`, `published: false`, and the two packs of the bundle are byte-identical. |
 | `bun run scripts/rehearse-migration.ts --source <copy>` | **exit 0** — 13/13 steps. |
 | `bun run scripts/live-artifact-test.ts` | **exit 0** — 12/12 steps. |
 | `bun run release:ci-rehearsal` | **exit 0** — 9/9 steps. |
-| `bun run scripts/make-candidate.ts` | **exit 0** — 6/6 steps. The source digest matches the tree over 193 source files, and the candidate covers 195 files. |
+| `bun run scripts/make-candidate.ts` | **exit 0** — 7/7 steps. The source digest matches the tree over 193 source files, and the candidate covers 195 files. |
 
 ### The live artifact test, in detail
 
 One local session, on `darwin/arm64`, OpenCode `v2.1.2`, model
 `ollama-cloud/deepseek-v4.1-flash`, artifact
-`42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87`.
+`42f242fb283d1dd53b694c49d0e2b91c93eb85deeb37e8b969f9365c8fb5be04`.
 
 | Check | Outcome |
 |---|---|
@@ -73,76 +76,42 @@ One local session, on `darwin/arm64`, OpenCode `v2.1.2`, model
 | An observable failure path | A write against a missing task: `"No task with that key."` |
 | Context retrieval | `src/widget.ts`, symbol `makeWidget` |
 | Graph retrieval | `src/widget.ts` (TypeScript) and `src/engine.go` (Go) |
-| The index is for **this** project | 3 files indexed for `/private/var/folders/lf/gjpczfx55cd5ypnzpqd1mbmr0000gn/T/opi-live-iZQH8T/project` |
+| The index is for **this** project | 3 files indexed for the temporary project's root |
 
 **Scope:** one local session on one platform. It does **not** establish
 cross-platform live compatibility, and it does not claim to.
 
 ---
 
-## 3. The cross-platform CI gate — dispatched, and blocked by the account
+## 3. The cross-platform CI gate
 
-**The repository was created (private), the branch was pushed, and the
-workflow was dispatched. The jobs did not start.**
-
-| Check | Result |
-|---|---|
-| `gh repo create nexussean/nexus-opi --private` | Created. `visibility: PRIVATE`, `isPrivate: true` |
-| `git push -u origin main` | Pushed. 279 files; no database, key or `.env` file was pushed |
-| `gh workflow list` | `Release checks (no publication)` — **active** |
-| `gh api …/actions/permissions` | `enabled: true` |
-| The workflow dispatch | Run `39669805379` |
-| The push-triggered run | Run `39669757531` |
-| **All six jobs, both runs** | **failure** — and they never started |
-
-GitHub's own annotation, on every job:
+The repository was created **private**, the branch was pushed, and the
+workflow was dispatched. It was refused, and the reason was recorded:
 
 > The job was not started because recent account payments have failed or
-> your spending limit needs to be increased. Please check the 'Billing &
-> plans' section in your settings.
+> your spending limit needs to be increased.
 
-**This is an account-level billing or spending-limit condition, not a
-workflow, code, or configuration problem.** The evidence that it is not the
-workflow:
+**12 job refusals across 4 runs**, on two different commits, on both the
+push trigger and the manual dispatch, every one of them in 2 to 3 seconds
+with **no steps at all** — a refusal to start, not a failed step. The
+workflow was active, the API was reachable, and the same file ran end to
+end in the local rehearsal, 9/9.
 
-- The workflow is **active** and GitHub accepted the dispatch.
-- The jobs failed in **2 seconds**, before any runner was allocated — a
-  workflow defect produces a *failed step* with output, not a refusal to
-  start.
-- The workflow file is the same one the **local rehearsal** ran end to end,
-  9/9, in the workflow's order.
-- The account's Actions API reports `enabled: true`.
+**That blocker is now gone.** The owner chose a **public** repository, and
+Actions on a public repository do not bill against a spending limit, so the
+jobs can start. The project is under the **AGPL**, which is the licence that
+makes a public repository coherent: the source is meant to be public, and
+the section 13 obligation to offer the Corresponding Source is met by the
+dashboard's **Source** link.
 
-The account's billing details could not be read to say which half of the
-cause applies: the API needs the `user` scope, and the token carries
-`gist, read:org, repo, workflow`. The message names both possibilities.
-
-### What closes it
-
-For a **private** repository, GitHub Actions bills against the account's
-**spending limit**, and a limit of $0 refuses to start any job. The owner
-must do one of:
-
-1. **Resolve the payment failure** and raise the Actions **spending limit**
-   above $0 — the private repository then runs, and nothing is exposed.
-2. **Make the repository public**, where Actions are free — but that
-   **exposes an unlicensed project**, and it is what the earlier
-   instructions ruled out.
-
-Option 1 is the one that keeps the project private. The repository stays
-private as it stands.
-
-### The workflow is prepared and reviewable
-
-`.github/workflows/release-checks.yml` runs on `ubuntu-latest`,
-`macos-latest` and `windows-latest` with `fail-fast: false`, so one
-platform's failure does not cancel the others' evidence. It runs the
-typecheck, the suite, the pilot, the recovery rehearsal, the build, the
-isolated install with the installed parsers, the dependency audit and the
-SBOM, the artifact check, and the candidate manifest; it records the runtime
-versions, the revision and the dependency information; and it uploads the
-per-platform evidence **whatever happened**. It has `permissions: contents:
-read` and **no publication job**.
+The workflow runs on `ubuntu-latest`, `macos-latest` and `windows-latest`
+with `fail-fast: false`, so one platform's failure does not cancel the
+others' evidence. It runs the typecheck, the suite, the pilot, the recovery
+rehearsal, the build, the isolated install with the installed parsers, the
+dependency audit and the SBOM, the artifact check, and the candidate
+manifest; it records the runtime versions, the revision and the dependency
+information; and it uploads the per-platform evidence **whatever happened**.
+It has `permissions: contents: read` and **no publication job**.
 
 The local rehearsal (`release/evidence/ci-rehearsal.json`) ran **all nine
 steps of the workflow, in the workflow's order, on this platform**, and all
@@ -221,13 +190,14 @@ the check **fails** if the tree has moved since the artifacts were built.
 
 | | |
 |---|---|
-| Source revision | `76639d951dad` on `main`, pushed to the private `nexussean/nexus-opi` |
-| Build source digest | `fcac726c6b340156…` over **195** files, matching the tree |
-| Artifact SHA-256 | `42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87` |
-| Files in the artifact | 87 |
+| Package | `@nexussean/opencode-project-intelligence` |
+| Version | 0.1.0 |
+| Licence | `AGPL-3.0` |
+| Build source digest | `6b6495c20578265e…` over **195** files, matching the tree |
+| Artifact SHA-256 | `42f242fb283d1dd53b694c49d0e2b91c93eb85deeb37e8b969f9365c8fb5be04` |
+| Files in the artifact | 88 (87 in the bundle, plus `MANIFEST.json`) |
 | Published | **false** |
-| Package name | `opencode-project-intelligence` (a placeholder for an undecided scope) |
-| License | `UNLICENSED` |
+| Private | **true** |
 
 The candidate includes the release manifest, the lockfile, the resolved
 dependency inventory, the SBOM, the licence inventory, the source manifest,
@@ -237,9 +207,28 @@ itself.
 **The version is derived, not written twice.** The bundle's manifest takes
 its version from `PLUGIN_VERSION` in the adapter, and the two cannot drift.
 
+**The name, the version and the licence are derived too.** They are read
+from the bundle's own manifest, so the candidate manifest cannot disagree
+with the artifact, and a rename cannot leave a stale string behind.
+
+### The runtime identity did not change
+
+The npm package is `@nexussean/opencode-project-intelligence`. The
+**runtime** identifier — the plugin id, the skill id, and the directory
+under `XDG_DATA_HOME` that holds the registry — is still
+`opencode-project-intelligence`.
+
+That is deliberate. The runtime identifier is where an existing
+installation's data lives, and changing it would orphan every existing
+registry, project and task. The two names are kept distinct so the package
+can be renamed and scoped without moving anyone's data. The tool namespace
+is `pi` for the same reason: it is set explicitly
+(`options: { namespace: "pi" }`), not derived from the package name, so the
+rename did not change a single tool id.
+
 ---
 
-## 7. Two findings worth keeping
+## 7. The findings worth keeping
 
 ### The dependency policy was wrong, and the fix is a policy, not a version
 
@@ -263,6 +252,24 @@ knowingly conflicting set without a word. The isolated install therefore
 uses **npm**, which does. A check that cannot fail proves nothing, and the
 negative control is recorded: npm rejects the original set with `ERESOLVE`
 and names the exact conflict.
+
+### The artifact's hash has to be a function of the source
+
+The candidate's identity is the artifact's SHA-256, so that hash must
+identify *what was built*, not *when it was built*. It was not being
+**proved** — it was assumed.
+
+The artifact check now packs the bundle **twice, into two different
+directories**, and compares the two tarballs byte for byte. They are
+identical, and the check **fails** if they are not. npm's packer
+normalises timestamps, so a matching pair is a real result rather than a
+tautology.
+
+This caught a real ambiguity during the rename: the artifact's hash changed
+between two runs, and the cause was not the packer at all — the `CHANGELOG`
+had been edited, so the bundle's content had genuinely changed. A hash that
+moves when the content moves is the right behaviour, but only if the
+difference is *provably* the content. Now it is.
 
 ### The floating-dependency fragility is upstream, and it clears
 
@@ -292,27 +299,50 @@ become optional, and a registry fault is not recorded as a pass.
 
 ---
 
-## 8. What remains
+## 8. What the AGPL changed, concretely
+
+The licence is not a label. Choosing AGPL-3.0 for a program with a
+network interface obliges three specific things, and all three are now
+done:
+
+1. **The licence travels with the program.** `LICENSE` is in the manifest's
+   `files`, is copied into the bundle, and the artifact check **fails** if
+   it is missing from the tarball. Section 4 requires that every recipient
+   is given a copy of the licence.
+2. **The dashboard carries the Appropriate Legal Notices.** Section 5(d)
+   requires a copyright notice, a statement that there is no warranty, a
+   statement that the work may be conveyed under the licence, and a way to
+   view a copy of it. The dashboard's footer carries all four.
+3. **The Corresponding Source is offered to remote users.** Section 13
+   requires that users interacting with a modified instance over a network
+   are offered its source. The footer carries a prominent **Source** link to
+   the public repository, which is how that obligation is discharged for
+   the dashboard.
+
+**What was deliberately not done:** the licence boilerplate was *not* added
+to the agent skill. The skill is loaded on demand and its content is
+context the model pays for on every use, and it is not a network interface
+for a human — the dashboard is. The reasoning is recorded in
+`LICENSE-NOTICE.md`.
+
+The third-party dependencies are unaffected: they retain their own licences,
+and every one of them in the tree is MIT.
+
+---
+
+## 9. What remains
 
 ### Technical blockers
 
 | # | Blocker | What closes it |
 |---|---|---|
-| **T-1** | **Cross-platform CI was dispatched and every job was refused.** GitHub: *"recent account payments have failed or your spending limit needs to be increased."* | An owner action in **Billing & plans**: resolve the payment failure and raise the Actions **spending limit** above $0. The repository is private and stays that way. |
+| **T-1** | **The cross-platform CI has not reported.** The workflow is dispatched; the hosted runs are the only evidence that Linux and Windows pass. | The hosted matrix. It is running. |
 | **T-2** | **The live T-13 audit has not been validated.** | A live Code Mode session with `OPI_AUDIT_LOG` set. Only required if complete T-13 auditing is in P8's scope. |
 | **T-3** | **The recovery rehearsal could not exercise a non-empty memory or verification table.** The owner's registry has none. | A database with populated memory and verification tables. |
-| **T-4** | **Only macOS has been exercised.** | The hosted matrix. |
+| **T-4** | **Only macOS has been exercised live.** | The hosted matrix, for the build and the gates. A live session on each platform remains a separate claim. |
 | **T-5** | **The Rust and Python parser adapters do not exist.** P8's scope names them. | Implementation, or an explicit scope decision to drop them from v1. |
-
-### Owner decisions
-
-| # | Decision | Why it is the owner's |
-|---|---|---|
-| **O-1** | **The registry identity**: the package name and the scope. | The candidate is a placeholder. It needs a scope the owner controls. |
-| **O-2** | **The licence.** | The candidate is `UNLICENSED` and `private: true`. No licence was selected and none was invented. |
-| **O-3** | **Whether to keep the repository private** at the cost of a spending limit, or make it public so Actions are free. | A public repository would expose an unlicensed project. It was created **private**. |
-| **O-4** | **The retrieval token criterion.** | The spike missed its own 1/3 bar; the shipping path clears the plan's 15% target by 4×. |
-| **O-5** | **The kanban plugin's fate** — absorb it or ship it separately. | It competes for the same board queries. |
+| **T-6** | **The npm scope `@nexussean` is unclaimed.** The package cannot be published under it until the scope is claimed. | Claim the scope on npmjs.com. It is free and unclaimed. |
+| **T-7** | **The kanban plugin has not been absorbed.** The decision is made; the work is not done. | Retire its JSON store and free-form state machine; keep its TUI and its card→session link; make it a surface over OPI's task store. See [`kanban-plugin-decision.md`](kanban-plugin-decision.md) for the boundary and the concrete costs. |
 
 ### Not blocking
 
@@ -322,18 +352,17 @@ become optional, and a registry fault is not recorded as a pass.
 - The **schema-size decision** is **NOT RESOLVED** and the minimal schema
   does not ship. The full schema remains the default, and that is the
   shipping configuration.
+- The **retrieval token criterion** is settled at the plan's own 15%
+  target, which the shipping path clears by 4×. No re-measurement is owed.
 
 ---
 
-## 9. What was deliberately not done
+## 10. What was deliberately not done
 
-- **Nothing was published.** `published: false`; the candidate is `private:
-  true` and `UNLICENSED`; the user's `~/.config/opencode` is unchanged; the
-  bundle is not in it; the real registry's mtime is unchanged.
-- **The repository was created PRIVATE**, the branch was pushed, and the
-  workflow was dispatched — all authorised by the owner. It is private, and
-  **publication remains disabled**: the package is `private: true` and
-  `UNLICENSED`, the workflow has no publish job, and `published: false`.
+- **Nothing was published to npm.** `published: false`; the package is
+  `private: true`; the workflow has **no publish job**; the user's
+  `~/.config/opencode` is unchanged; the bundle is not in it; the real
+  registry's mtime is unchanged.
 - **The shipping schema default was not changed.**
 - **No optimisation matrix was run.**
 - **No real user configuration or data was modified.** The live test used a
@@ -342,3 +371,5 @@ become optional, and a registry fault is not recorded as a pass.
   every mutation in a copy.
 - **No historical report was rewritten.** The earlier readiness report is
   preserved, and the regrade wrote new files alongside the originals.
+- **The runtime identifier was not renamed.** Only the package name and the
+  licence changed. An existing installation's data stays where it is.

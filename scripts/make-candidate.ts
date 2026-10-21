@@ -107,6 +107,26 @@ step(
     : `no git metadata; content digest ${content.digest.slice(0, 16)} over ${content.files} files`,
 )
 
+// --- The bundle manifest ----------------------------------------------------
+// The name, the version and the licence are read from the bundle's own
+// manifest, so the candidate cannot disagree with the artifact.
+const bundleManifestPath = join(REPO, "release/bundle/package.json")
+let bundleManifest: { name: string; version: string; license: string; private?: boolean } = {
+  name: "unknown",
+  version: "unknown",
+  license: "unknown",
+}
+if (!existsSync(bundleManifestPath)) {
+  step("the bundle's manifest exists", false, "release/bundle/package.json is missing")
+} else {
+  bundleManifest = JSON.parse(await readFile(bundleManifestPath, "utf8"))
+  step(
+    "the bundle's manifest exists",
+    true,
+    `${bundleManifest.name}@${bundleManifest.version}, licence ${bundleManifest.license}`,
+  )
+}
+
 // --- The artifact -----------------------------------------------------------
 const artifactCheckPath = join(EVIDENCE, "artifact-check.json")
 if (!existsSync(artifactCheckPath)) {
@@ -119,8 +139,13 @@ if (!existsSync(artifactCheckPath)) {
     files: number
     published: boolean
     status: string
+    tarball: string
   }
-  const tarball = join(EVIDENCE, "opencode-project-intelligence-0.1.0.tgz")
+  // The tarball's name follows the package's name, and the package's name
+  // carries a scope, so the file is `nexussean-opencode-project-intelligence
+  // -0.1.0.tgz`. It is read from the artifact check rather than written
+  // here, so a rename cannot leave a stale name behind.
+  const tarball = join(EVIDENCE, artifact.tarball)
   const tarballExists = existsSync(tarball)
   let tarballHash = ""
   if (tarballExists) {
@@ -221,10 +246,10 @@ if (!existsSync(artifactCheckPath)) {
       "The release candidate. Every artifact and every validation result below belongs to this source revision and this artifact hash. Evidence from different candidates must not be combined.",
     date: new Date().toISOString(),
     candidate: {
-      name: "opencode-project-intelligence",
-      version: "0.1.0",
-      private: true,
-      license: "UNLICENSED",
+      name: bundleManifest.name,
+      version: bundleManifest.version,
+      private: bundleManifest.private === true,
+      license: bundleManifest.license,
       published: false,
     },
     source: {
@@ -236,7 +261,7 @@ if (!existsSync(artifactCheckPath)) {
       buildSourceDigest: artifact.sourceDigest,
     },
     artifact: {
-      tarball: "opencode-project-intelligence-0.1.0.tgz",
+      tarball: artifact.tarball,
       sha256: artifact.sha256,
       files: artifact.files,
       status: artifact.status,

@@ -1,6 +1,6 @@
 {
   "note": "The live artifact test: a real OpenCode session against the PACKAGED artifact, installed into a temporary directory, with a temporary configuration, temporary projects and temporary application data. Nothing in the user's real installation or registry was touched.",
-  "date": "2026-10-21T20:02:18.242Z",
+  "date": "2026-10-21T20:59:09.474Z",
   "platform": {
     "os": "darwin",
     "arch": "arm64"
@@ -10,8 +10,8 @@
     "version": "opencode v2.1.2"
   },
   "artifact": {
-    "tarball": "opencode-project-intelligence-0.1.0.tgz",
-    "sha256": "42959686edcd5497b70e0e5e7b7cf09b77159d725e65beefe67e3c5d0ab0ea87"
+    "tarball": "nexussean-opencode-project-intelligence-0.1.0.tgz",
+    "sha256": "42f242fb283d1dd53b694c49d0e2b91c93eb85deeb37e8b969f9365c8fb5be04"
   },
   "model": "ollama-cloud/deepseek-v4.1-flash",
   "registeredTools": [
@@ -22,7 +22,7 @@
     "pi.task",
     "pi.verify"
   ],
-  "indexRoot": "/private/var/folders/lf/gjpczfx55cd5ypnzpqd1mbmr0000gn/T/opi-live-iZQH8T/project",
+  "indexRoot": "/private/var/folders/lf/gjpczfx55cd5ypnzpqd1mbmr0000gn/T/opi-live-UlarXe/project",
   "codeModeAudit": "disabled — not exercised; its live validation is a separate gate",
   "scope": "One local session on one platform. It does NOT establish cross-platform live compatibility.",
   "steps": [
@@ -44,7 +44,7 @@
     {
       "step": "a task is created and listed",
       "ok": true,
-      "detail": "the created task's key: live-artifact-task — Created the task and listed the board. - **Key:** `live-artifact-task` - **Revision:** `1` - **Tasks listed:** `1` (state `backlog`, type `f"
+      "detail": "the created task's key: live-artifact-task — Created task key: `live-artifact-task` Revision: `1` Tasks listed: `1`"
     },
     {
       "step": "the board lists the created task",
@@ -54,37 +54,37 @@
     {
       "step": "a write changes the task",
       "ok": true,
-      "detail": "Status: **ok**. The task `live-artifact-task` was updated to title `Live artifact task renamed`, and its new revision is **2**."
+      "detail": "Status: **ok** — revision is now **2** (was 1). The task `live-artifact-task` is titled \"Live artifact task renamed\"."
     },
     {
       "step": "a stale revision is refused",
       "ok": true,
-      "detail": "The call returned: ```json {\"schema_version\":\"1\",\"status\":\"error\",\"project_id\":\"6854ffed-d454-41ed-b6cd-91121a90891d\",\"worktree_id\":\"351eb823-54eb-42ec-911f-65d27d4cedf6\",\"warnings\":[\"This task is at "
+      "detail": "The tool returned: ```json {\"schema_version\":\"1\",\"status\":\"error\",\"project_id\":\"ddf2e7c8-80c8-4281-9065-42009e8b7f1d\",\"worktree_id\":\"be7481f0-8965-4b7b-93bb-cacf19659d2f\",\"warnings\":[\"This task is at "
     },
     {
       "step": "the verification state is reported and stays honest",
       "ok": true,
-      "detail": "**Yes — the task reached `done`.** But not in one step: the board rejects `backlog → done` and `in_progress → done`, so I walked it through the allowed path (`backlog → in_progress → review → done`). "
+      "detail": "**No — the task did not reach `done`.** The transition was refused by the task board: > \"A task cannot move from backlog to done. Allowed from backlog: ready, in_progress, archived.\" What I did: 1. Re"
     },
     {
       "step": "a write against a task that does not exist fails visibly",
       "ok": true,
-      "detail": "```json {\"schema_version\":\"1\",\"status\":\"error\",\"project_id\":\"6854ffed-d454-41ed-b6cd-91121a90891d\",\"worktree_id\":\"351eb823-54eb-42ec-911f-65d27d4cedf6\",\"warnings\":[\"No task with that key.\"],\"sources\":"
+      "detail": "The tool returned: ```json {\"schema_version\":\"1\",\"status\":\"error\",\"project_id\":\"ddf2e7c8-80c8-4281-9065-42009e8b7f1d\",\"worktree_id\":\"be7481f0-8965-4b7b-93bb-cacf19659d2f\",\"warnings\":[\"No task with tha"
     },
     {
       "step": "the index is built for the fixture project",
       "ok": true,
-      "detail": "3 files indexed for /private/var/folders/lf/gjpczfx55cd5ypnzpqd1mbmr0000gn/T/opi-live-iZQH8T/project"
+      "detail": "3 files indexed for /private/var/folders/lf/gjpczfx55cd5ypnzpqd1mbmr0000gn/T/opi-live-UlarXe/project"
     },
     {
       "step": "context retrieval finds the TypeScript symbol",
       "ok": true,
-      "detail": "Found one match: - **File:** `src/widget.ts` (lines 1–3) - **Symbol:** `makeWidget` — a function"
+      "detail": "**File found** - `src/widget.ts` (lines 1–3) **Symbol** - `makeWidget` — function (`makeWidget`, qualified name `makeWidget`) Confidence: resolved (matched exactly, score 1.5)."
     },
     {
       "step": "graph retrieval finds the TypeScript and Go symbols",
       "ok": true,
-      "detail": "Each query found one symbol: **`makeWidget`** - `makeWidget` — function, defined in `src/widget.ts`, lines 1–3 **`Engine`** - `Engine` — type, defined in `src/engine.go`, line 3 Both lookups resolved with confidence and "
+      "detail": "I'll run both symbol searches.Both searches returned one match each: **`makeWidget`** - `makeWidget` — function in `src/widget.ts`, lines 1–3 **`Engine`** - `Engine` — type in `src/engine.go`, line 3 Both results were re"
     }
   ],
   "passed": 12,

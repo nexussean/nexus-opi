@@ -254,7 +254,11 @@ try {
     Object.keys(bundleManifest.dependencies ?? {}).join(", "),
   )
 
-  for (const file of ["README.md", "CHANGELOG.md", "LICENSE-NOTICE.md"]) {
+  // The licence travels with the program. The AGPL requires that every
+  // recipient is given a copy of it (section 4), so it is copied into the
+  // bundle and listed in the manifest's `files`, and the artifact check
+  // fails if it is missing from the tarball.
+  for (const file of ["README.md", "CHANGELOG.md", "LICENSE", "LICENSE-NOTICE.md"]) {
     await cp(join(REPO, file), join(OUT, file))
   }
 

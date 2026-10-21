@@ -22,5 +22,6 @@
   "files": [
     "index.ts",
     "src"
-  ]
+  ],
+  "license": "AGPL-3.0"
 }

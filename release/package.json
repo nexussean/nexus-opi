@@ -1,5 +1,5 @@
 {
-  "name": "opencode-project-intelligence",
+  "name": "@nexussean/opencode-project-intelligence",
   "version": "0.1.0",
   "type": "module",
   "description": "Project-aware task state, code navigation, memory and verification for OpenCode.",
@@ -10,7 +10,7 @@
     "memory",
     "code-navigation"
   ],
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0",
   "exports": {
     ".": "./index.ts"
   },
@@ -28,6 +28,7 @@
     "README.md",
     "CHANGELOG.md",
     "MANIFEST.json",
+    "LICENSE",
     "LICENSE-NOTICE.md"
   ],
   "engines": {

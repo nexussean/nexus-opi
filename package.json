@@ -1,5 +1,5 @@
 {
-  "name": "opencode-project-intelligence",
+  "name": "@nexussean/opencode-project-intelligence",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -37,5 +37,6 @@
     "tree-sitter-go",
     "tree-sitter-javascript",
     "tree-sitter-typescript"
-  ]
+  ],
+  "license": "AGPL-3.0"
 }

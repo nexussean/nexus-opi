@@ -17,5 +17,6 @@
     "@opi/contracts": "workspace:*",
     "@opi/core": "workspace:*",
     "@opi/db": "workspace:*"
-  }
+  },
+  "license": "AGPL-3.0"
 }

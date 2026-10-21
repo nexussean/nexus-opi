@@ -27,5 +27,6 @@
     "index.ts",
     "src",
     "scripts"
-  ]
+  ],
+  "license": "AGPL-3.0"
 }

@@ -32,7 +32,36 @@ async function run(cmd: string[], cwd: string) {
 try {
   const packed = JSON.parse(await run([npm, "pack", "--json", "--ignore-scripts", "--pack-destination", scratch], join(root, "release/bundle")))[0]
   const files = new Set<string>(packed.files.map((f: any) => f.path))
-  for (const required of ["index.ts", "package.json", "packages/adapter-opencode/src/index.ts", "packages/adapter-opencode/src/web/server.ts", "scripts/dashboard.ts", "CHANGELOG.md"]) {
+
+  // The artifact's hash is the candidate's identity, so the hash has to be
+  // a function of the source and nothing else.
+  //
+  // The bundle is packed a second time, into a different directory, and
+  // the two tarballs are compared byte for byte. If they differ, then the
+  // hash records when the build ran rather than what it built, and the
+  // candidate's identity is not reproducible. npm's packer normalises
+  // timestamps, so a matching pair of hashes is a real result and not a
+  // tautology.
+  const second = await mkdtemp(join(tmpdir(), "opi-repack-"))
+  try {
+    await run([npm, "pack", "--ignore-scripts", "--pack-destination", second], join(root, "release/bundle"))
+    const repacked = (await readdir(second)).filter(name => name.endsWith(".tgz"))
+    const firstBytes = await readFile(join(scratch, packed.filename))
+    const secondBytes = repacked.length ? await readFile(join(second, repacked[0]!)) : Buffer.alloc(0)
+    const identical = firstBytes.length > 0 && firstBytes.equals(secondBytes)
+    if (!identical) {
+      throw new Error(
+        `The artifact is not reproducible: two packs of the same bundle differ (${packed.filename})`,
+      )
+    }
+    console.log(`  reproducible: two packs of the bundle are byte-identical (${packed.filename})`)
+  } finally {
+    await rm(second, { recursive: true, force: true })
+  }
+  // The licence must travel with the program: the AGPL requires that every
+  // recipient is given a copy of it (section 4), so it is a required file
+  // in the tarball, not an optional extra.
+  for (const required of ["index.ts", "package.json", "packages/adapter-opencode/src/index.ts", "packages/adapter-opencode/src/web/server.ts", "scripts/dashboard.ts", "CHANGELOG.md", "LICENSE"]) {
     if (!files.has(required)) throw new Error(`Tarball missing ${required}`)
   }
   if ([...files].some(p => p.includes("node_modules/") || p.includes("/test/"))) throw new Error("Development files leaked into tarball")
@@ -69,6 +98,7 @@ try {
     const tarBytes = await readFile(archive)
     await writeFile(join(evidence, packed.filename), tarBytes)
     await writeFile(join(evidence, "artifact-check.json"), JSON.stringify({ version: packed.version,
+      name: packed.name,
       tarball: packed.filename, sha256: createHash("sha256").update(tarBytes).digest("hex"),
       files: files.size, status: "isolated-install-blocked", isolatedImport, dashboardBuild,
       installError, published: false }, null, 2))
@@ -98,7 +128,7 @@ try {
   await writeFile(join(evidence, "dependency-audit.json"), auditOut || JSON.stringify({ error: auditErr }))
   const tarBytes = await readFile(archive)
   await writeFile(join(evidence, packed.filename), tarBytes)
-  const report = { version: packed.version, platform: process.platform, arch: process.arch,
+  const report = { version: packed.version, name: packed.name, platform: process.platform, arch: process.arch,
     bun: Bun.version, tarball: packed.filename, sha256: createHash("sha256").update(tarBytes).digest("hex"),
     sourceDigest, files: files.size, isolatedImport, dashboardBuild, installError, sbomComplete, diagnosticPeerTree: Boolean(installError), auditExitCode: auditCode,
     status: installError ? "isolated-install-blocked" : auditCode === 0 && sbomComplete ? "artifact-checks-passed" : "dependency-audit-blocked", published: false }
