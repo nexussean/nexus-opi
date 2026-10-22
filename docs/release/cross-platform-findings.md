@@ -18,8 +18,16 @@ that produced the data.
 | `39675528991` | `0ebb742` | failure | failure | failure |
 | `39678625156` | `9a6f833` | **success** | **success** | failure |
 | `39679684149` | `c9024c5` | **success** | **success** | failure |
-| `39680738035` | `6dbed49` | **success** | **success** | failure |
+| `39680738035` | `6dbed49` | **success** | **success** | failure (the build) |
 | `39681549930` | `cf6c134` | **success** | **success** | failure (the build) |
+| `39688306328` | `da134c5` | **success** | **success** | failure (the isolated install) |
+| `39689552117` | `296b9f4` | **success** | **success** | failure (the artifact check) |
+| `39694886710` | `5e853d2` | **success** | **success** | failure (the artifact check) |
+| `39696023486` | `cba083a` | **success** | **success** | failure (the artifact check) |
+| `39696790101` | `7198b46` | **success** | **success** | **success** |
+
+The last row is the one that matters. Each row above it moved Windows one
+step further along the workflow, and each step was a real finding.
 
 The first run failed on all three platforms with a single cause: the
 grader's regression test read `fixtures/bench/results`, which is
@@ -136,7 +144,23 @@ clone looks like. That is now checked on every run.
 
 ---
 
-## 5. What the gate is now
+## 5. The artifact's bytes depended on the platform
+
+The passing run's own evidence said it: **macOS and Linux produced the
+same tarball hash** — the same hash as the local build, byte for byte —
+and **Windows produced a different one**.
+
+The difference was **every text file**. Git for Windows checks text files
+out with CRLF by default, and the build copies the checked-out files into
+the bundle, so the tarball's bytes were the checkout's bytes.
+
+An artifact's hash is the candidate's identity, and an identity that
+depends on the platform it was built on is not an identity. A
+`.gitattributes` now says every text file is checked out with LF, and the
+file is part of the source digest, so the candidate records that the
+policy is in force rather than assuming it.
+
+## 6. What the gate is now
 
 - `fail-fast: false`, so one platform's failure does not cancel the
   others' evidence.

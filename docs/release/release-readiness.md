@@ -7,9 +7,10 @@
 **Artifact SHA-256:** `3bcc37c4a7651ea40992283991d5be4d8fd5cf7ae34e74ef4f73bdac781a2a73`.
 **Tarball:** `nexussean-opencode-project-intelligence-0.1.0.tgz`, 89 files.
 
-**Verdict: every gate that can run on one platform is met, and the owner
-decisions are made. The hosted three-platform CI is dispatched and is
-running; its result is in §3.
+**Verdict: every gate passes, on one platform and on all three.** The
+hosted CI succeeded on macOS, Linux and Windows. The owner decisions are
+made. Two things are not done: the package is not published to npm, and the
+kanban plugin has not yet been absorbed.
 
 The previous report is preserved at
 [`release-readiness-before-artifact-audit.md`](release-readiness-before-artifact-audit.md).
@@ -31,7 +32,7 @@ Nothing in it was rewritten; this report adds evidence for this candidate.
 | **Recovery rehearsal** | **PASS** | 13/13 against a **copy of the real registry**. 36 project identities, 17 tasks and 19 task events preserved byte for byte; a controlled migration failure rolled back; the restore is exact; the source is unchanged. |
 | **Live final artifact** | **PASS** | 12/12. The **packaged tarball** in a real OpenCode session, with a temporary configuration, temporary project and temporary data. `fixtures/acceptance/release/live-artifact.json`. |
 | **CI rehearsal** | **PASS** | 9/9 local rehearsal of the workflow's steps, in the workflow's order. `release/evidence/ci-rehearsal.json`. |
-| **Cross-platform CI (macOS, Linux, Windows)** | **RUNNING** | The repository is public, the branch is pushed, and the workflow has run on all three platforms. macOS and Linux pass; Windows found real defects, all now fixed. See §3 and [`cross-platform-findings.md`](cross-platform-findings.md). |
+| **Cross-platform CI (macOS, Linux, Windows)** | **PASS** | Run `39696790101` at revision `7198b46`: **all three platforms succeeded**, each uploading its own evidence. The runs before it found real defects, all now fixed. See §3 and [`cross-platform-findings.md`](cross-platform-findings.md). |
 | **T-13 live validation** | **NOT RUN** | The experimental Code Mode audit is disabled, as the plan requires. See §4. |
 | **Registry identity** | **DECIDED** | `@nexussean/opencode-project-intelligence`. The scope is unclaimed on npm and is the owner's to claim. |
 | **Licensing** | **DECIDED** | AGPL-3.0. `LICENSE` and `LICENSE-NOTICE.md` travel in the tarball, and the artifact check **fails** if the licence is missing. |
@@ -56,7 +57,7 @@ Every command, and what it returned.
 | `bun run scripts/rehearse-migration.ts --source <copy>` | **exit 0** — 13/13 steps. |
 | `bun run scripts/live-artifact-test.ts` | **exit 0** — 12/12 steps. |
 | `bun run release:ci-rehearsal` | **exit 0** — 9/9 steps. |
-| `bun run scripts/make-candidate.ts` | **exit 0** — 7/7 steps. The source digest matches the tree over 193 source files, and the candidate covers 195 files. |
+| `bun run scripts/make-candidate.ts` | **exit 0** — 7/7 steps. The build's source digest matches the tree over 198 files, and the candidate's own content digest covers 200. |
 
 ### The live artifact test, in detail
 
@@ -164,6 +165,37 @@ with the gitignored data absent.
 The full account, with the runs and the reasoning, is in
 [`cross-platform-findings.md`](cross-platform-findings.md).
 
+### The run that passed
+
+Run **`39696790101`**, at revision `7198b46`, in 7 minutes 48 seconds.
+**All three jobs succeeded**, and each uploaded its own evidence.
+
+| Platform | Architecture | Bun | Node | npm | Artifact SHA-256 |
+|---|---|---|---|---|---|
+| `macos-latest` | arm64 | 1.4.2 | v24.21.0 | 11.19.0 | `3bcc37c4a7651ea4…` |
+| `ubuntu-latest` | x86_64 | 1.4.2 | v24.22.0 | 11.19.1 | `3bcc37c4a7651ea4…` |
+| `windows-latest` | x86_64 | 1.4.2 | v24.21.0 | 11.19.0 | `3bcc37c4a7651ea4…` |
+
+Three things are worth reading out of that table.
+
+**The same commit produced the same artifact on macOS and Linux** — the
+same hash as the local build, byte for byte. That is the reproducibility
+claim, and it is now *measured* rather than asserted.
+
+**Windows produced a different hash**, and the reason was in the evidence:
+Git for Windows checks text files out with CRLF, so every text file
+differed, and the build copies the checked-out files into the bundle. The
+artifact's identity depended on the platform it was built on, which is not
+an identity. A `.gitattributes` now says every text file is checked out
+with LF, and the file is part of the source digest, so the candidate
+records that the policy is in force rather than assuming it.
+
+**The evidence is per platform.** Each job uploads its own
+`release/evidence/` and its own `release/candidate.json`, with the runtime
+versions, the revision, the dependency information and the artifact hash
+for that platform. A failure on one platform does not cancel the others'
+evidence, because `fail-fast` is off.
+
 ---
 
 ## 4. The T-13 live validation — a separate gate
@@ -238,7 +270,7 @@ the check **fails** if the tree has moved since the artifacts were built.
 | Package | `@nexussean/opencode-project-intelligence` |
 | Version | 0.1.0 |
 | Licence | `AGPL-3.0` |
-| Build source digest | `6b6495c20578265e…` over **195** files, matching the tree |
+| Build source digest | `7418d05c97ddf5cd…` over **198** files, matching the tree |
 | Artifact SHA-256 | `3bcc37c4a7651ea40992283991d5be4d8fd5cf7ae34e74ef4f73bdac781a2a73` |
 | Files in the artifact | 89 (88 in the bundle, plus `MANIFEST.json`) |
 | Published | **false** |
@@ -381,7 +413,7 @@ and every one of them in the tree is MIT.
 
 | # | Blocker | What closes it |
 |---|---|---|
-| **T-1** | **The cross-platform CI is running.** macOS and Linux pass. Windows found real defects — a trust boundary that was not one, a PATH split on a hard-coded colon, a process tree that was not killed, and a bundle that could not import its own dependency — all now fixed. | The final run on this candidate's revision. |
+| **T-1** | **Closed.** The cross-platform CI succeeded on all three platforms. The runs before it found real defects — a trust boundary that was not one, a PATH split on a hard-coded colon, a process tree that was not killed, a bundle that could not import its own dependency, and an artifact whose bytes depended on the platform — all now fixed. | Nothing. It passed. |
 | **T-2** | **The live T-13 audit has not been validated.** | A live Code Mode session with `OPI_AUDIT_LOG` set. Only required if complete T-13 auditing is in P8's scope. |
 | **T-3** | **The recovery rehearsal could not exercise a non-empty memory or verification table.** The owner's registry has none. | A database with populated memory and verification tables. |
 | **T-4** | **Only macOS has been exercised live.** | The hosted matrix, for the build and the gates. A live session on each platform remains a separate claim. |
