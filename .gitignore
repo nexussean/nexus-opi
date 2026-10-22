@@ -18,6 +18,13 @@ fixtures/bench/results/
 # Generated release artifacts; retain locally or upload as CI evidence
 release/bundle/
 release/evidence/
+# The audit and the SBOM are **generated** by the build, and the build
+# rewrites them with a fresh date. Tracking them meant the build dirtied
+# the tree it was building from, and the candidate's "dirty" flag said
+# true on every run — which made the flag meaningless. They are still
+# part of the candidate, and the CI still uploads them as evidence.
+release/dependency-audit.json
+release/sbom.json
 # The candidate manifest is regenerated for every build, and it names the
 # revision it was built from. Committing it would make the tree dirty the
 # moment it is regenerated, so it would never agree with the commit it
