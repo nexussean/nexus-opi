@@ -1,0 +1,16 @@
+# The artifact must be byte-identical on every platform.
+#
+# Git for Windows checks text files out with CRLF by default, so a Windows
+# checkout's sources differ from a macOS or Linux one — every byte of every
+# text file. The build copies the checked-out files into the bundle, so the
+# **tarball** differed too: the same commit produced a different artifact
+# hash on Windows.
+#
+# `text=auto` lets git decide what is text, and `eol=lf` says every text
+# file is checked out with LF. Binaries are untouched. The artifact's hash
+# is the candidate's identity, and an identity that depends on the platform
+# it was built on is not an identity.
+#
+# The file is part of the source digest, so the candidate records that the
+# policy is in force rather than assuming it.
+* text=auto eol=lf

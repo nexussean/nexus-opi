@@ -18,7 +18,7 @@ async function fingerprint(dir: string) {
   }
 }
 for (const dir of ["packages", "scripts", ".github"]) await fingerprint(join(root, dir))
-for (const path of ["package.json", "bun.lock", "release/package.json", "tsconfig.base.json"]) sourceFiles.push({ path, sha256: createHash("sha256").update(await readFile(join(root, path))).digest("hex") })
+for (const path of ["package.json", "bun.lock", "release/package.json", "tsconfig.base.json", ".gitattributes"]) sourceFiles.push({ path, sha256: createHash("sha256").update(await readFile(join(root, path))).digest("hex") })
 sourceFiles.sort((a,b) => a.path.localeCompare(b.path))
 const sourceDigest = createHash("sha256").update(JSON.stringify(sourceFiles)).digest("hex")
 await writeFile(join(evidence, "source-manifest.json"), JSON.stringify({ sourceDigest, files: sourceFiles }, null, 2))

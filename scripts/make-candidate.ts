@@ -76,7 +76,7 @@ async function contentDigest(): Promise<{ digest: string; files: number }> {
     if (!existsSync(path)) continue
     await walk(path)
   }
-  for (const name of ["package.json", "bun.lock", "release/package.json", "tsconfig.base.json"]) {
+  for (const name of ["package.json", "bun.lock", "release/package.json", "tsconfig.base.json", ".gitattributes"]) {
     if (existsSync(join(REPO, name))) files.push(name)
   }
   files.sort()
