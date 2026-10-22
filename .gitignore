@@ -25,6 +25,15 @@ release/evidence/
 # part of the candidate, and the CI still uploads them as evidence.
 release/dependency-audit.json
 release/sbom.json
+# The acceptance evidence is **generated** by the gates — the pilot, the
+# isolated install and the live test — and every one of them rewrites its
+# file with a fresh date. Tracking them meant that running a gate dirtied
+# the tree it had just verified, and the candidate's "dirty" flag said
+# true on every run. The gates are what produce them, and the CI uploads
+# them as evidence; the repository does not need to carry them.
+fixtures/acceptance/release/pilot.json
+fixtures/acceptance/release/isolated-install.json
+fixtures/acceptance/release/live-artifact.json
 # The candidate manifest is regenerated for every build, and it names the
 # revision it was built from. Committing it would make the tree dirty the
 # moment it is regenerated, so it would never agree with the commit it
