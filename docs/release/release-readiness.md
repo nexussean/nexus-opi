@@ -176,19 +176,35 @@ Run **`39696790101`**, at revision `7198b46`, in 7 minutes 48 seconds.
 | `ubuntu-latest` | x86_64 | 1.4.2 | v24.22.0 | 11.19.1 | `3bcc37c4a7651ea4…` |
 | `windows-latest` | x86_64 | 1.4.2 | v24.21.0 | 11.19.0 | `3bcc37c4a7651ea4…` |
 
-Three things are worth reading out of that table.
+That table is from the run that **passed**; the run that confirmed the
+three-platform agreement is `39701447188`, at revision `a3192d3`, and it
+says the same thing:
 
-**The same commit produced the same artifact on macOS and Linux** — the
-same hash as the local build, byte for byte. That is the reproducibility
-claim, and it is now *measured* rather than asserted.
+| Platform | Artifact SHA-256 | Source digest | Files | Tree |
+|---|---|---|---|---|
+| `macos-latest` | `3bcc37c4a7651ea4…` | `7418d05c97ddf5cd…` | 198 | clean |
+| `ubuntu-latest` | `3bcc37c4a7651ea4…` | `7418d05c97ddf5cd…` | 198 | clean |
+| `windows-latest` | `3bcc37c4a7651ea4…` | `7418d05c97ddf5cd…` | 198 | clean |
 
-**Windows produced a different hash**, and the reason was in the evidence:
-Git for Windows checks text files out with CRLF, so every text file
-differed, and the build copies the checked-out files into the bundle. The
-artifact's identity depended on the platform it was built on, which is not
-an identity. A `.gitattributes` now says every text file is checked out
-with LF, and the file is part of the source digest, so the candidate
+**The same commit produced the same artifact, byte for byte, on all three
+platforms** — and the same hash as the local build. That is the
+reproducibility claim, and it is now *measured* rather than asserted.
+
+Getting there took one more fix. The first passing run showed macOS and
+Linux agreeing and **Windows differing**, and the reason was in the
+evidence: Git for Windows checks text files out with CRLF, so every text
+file differed, and the build copies the checked-out files into the bundle.
+The artifact's identity depended on the platform it was built on, which is
+not an identity. A `.gitattributes` now says every text file is checked
+out with LF, and the file is part of the source digest, so the candidate
 records that the policy is in force rather than assuming it.
+
+The **tree** column is the last thing that took fixing. The gates
+regenerate their own evidence — the audit, the SBOM, the pilot's — and each
+one rewrites its file with a fresh date, so a run left the tree dirty and
+the candidate's `dirty` flag said true every time, which made the flag
+meaningless. The generated files are untracked now, and the flag says what
+it is for.
 
 **The evidence is per platform.** Each job uploads its own
 `release/evidence/` and its own `release/candidate.json`, with the runtime
