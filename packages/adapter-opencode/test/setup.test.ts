@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync } from "node:fs"
 import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises"
-import { tmpdir } from "node:os"
+import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
 import plugin from "../index.ts"
+import { isNeverAProject } from "../src/index.ts"
 import { indexPath } from "@opi/db"
 
 let box: string
@@ -164,6 +165,29 @@ describe("plugin setup", () => {
     dispose?.()
     expect(registeredSkills.length).toBeGreaterThan(0)
     expect(registeredSkills[0]).toContain("project-intelligence")
+  })
+
+  test("setup does nothing for the home directory", async () => {
+    // OpenCode 2.2.0's desktop service runs from `$HOME`, and a request with
+    // no location builds a location there. The plugin must not index it,
+    // watch it, or even open its stores.
+    registeredSkills = []
+    registeredCommands = []
+    const dispose = await plugin.setup(context(homedir()) as never)
+    expect(typeof dispose).toBe("function")
+    dispose?.()
+    expect(existsSync(dataDir)).toBe(false)
+    expect(registeredSkills).toEqual([])
+    expect(registeredCommands).toEqual([])
+  })
+
+  test("the home directory and the root are never a project", () => {
+    expect(isNeverAProject(homedir())).toBe(true)
+    expect(isNeverAProject(`${homedir()}/`)).toBe(true)
+    expect(isNeverAProject("/")).toBe(true)
+    expect(isNeverAProject(undefined)).toBe(true)
+    expect(isNeverAProject(project)).toBe(false)
+    expect(isNeverAProject(join(homedir(), "Documents", "repo"))).toBe(false)
   })
 
   test("the index is keyed by the worktree, not the project", () => {

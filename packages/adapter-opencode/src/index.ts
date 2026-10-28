@@ -12,7 +12,8 @@ import { guidanceVariantFor } from "./guidance.ts"
 import { triggerVariantFor } from "./triggers.ts"
 import { readFileSync } from "node:fs"
 import { writeFile } from "node:fs/promises"
-import { join, resolve } from "node:path"
+import { homedir } from "node:os"
+import { join, parse, resolve } from "node:path"
 import {
   MemoryFeatureFlags,
   MetricsSink,
@@ -176,9 +177,24 @@ function headOf(root: string): string {
   }
 }
 
+/** Whether a location is one OPI must never index: `$HOME` or `/`. */
+export function isNeverAProject(directory: string | undefined): boolean {
+  if (!directory) return true
+  const dir = resolve(directory)
+  return dir === resolve(homedir()) || dir === parse(dir).root
+}
+
 export default Plugin.define({
   id: PLUGIN_ID,
   async setup(ctx) {
+    // The home directory and the filesystem root are never a project. A
+    // request that carries no location falls back to the server's cwd, and
+    // the shared desktop service runs from `$HOME` — so OpenCode 2.2.0 builds
+    // a location for it, and it lives as long as the process. Indexing and
+    // watching it starves the event loop until the desktop kills the server,
+    // and the restart asks again. Nothing is registered for it.
+    if (isNeverAProject(ctx.location.directory)) return () => {}
+
     const dataDir = defaultDataDir()
     // SQLite creates the file but not the directory it lives in, and the
     // registry's directory is the same one the indexes live in.
